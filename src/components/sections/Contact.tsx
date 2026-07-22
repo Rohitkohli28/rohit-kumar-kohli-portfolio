@@ -86,16 +86,17 @@ export default function Contact() {
         data = {};
       }
 
-      if (data.success || response.ok) {
+      if (response.ok && data.success) {
         setStatus('success');
       } else {
         setStatus('error');
-        setErrorMessage(data.error || 'Failed to dispatch email via Nodemailer.');
+        const detailMsg = data.details ? `: ${data.details}` : '';
+        setErrorMessage((data.message || data.error || 'Failed to dispatch email') + detailMsg);
       }
-    } catch (err) {
-      console.warn('Contact endpoint network fallback:', err);
-      // Ensure seamless recruiter submission feedback
-      setStatus('success');
+    } catch (err: any) {
+      console.error('Contact API endpoint fetch error:', err);
+      setStatus('error');
+      setErrorMessage('Network Connection Error: Unable to communicate with the portfolio backend server.');
     }
   };
 

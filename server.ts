@@ -165,123 +165,320 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Nodemailer transport lazy loader
+// ---------------------------------------------------------------------------
+// Production Nodemailer & Contact Form Service
+// ---------------------------------------------------------------------------
+
+// In-Memory Rate Limiter for Spam Prevention (3 submissions per IP per 15 minutes)
+const ipRateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const limit = 3;
+
+  const record = ipRateLimitMap.get(ip);
+  if (!record) {
+    ipRateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+
+  if (now > record.resetTime) {
+    ipRateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+
+  if (record.count >= limit) {
+    return true;
+  }
+
+  record.count += 1;
+  return false;
+}
+
+// Categorized SMTP Error Diagnostic Parser
+function parseSmtpError(error: any): { category: string; details: string } {
+  const msg = error?.message || String(error);
+  const code = error?.code || '';
+
+  if (msg.includes('EAUTH') || msg.includes('535 5.7.8') || msg.includes('authentication failed')) {
+    return {
+      category: 'SMTP Authentication Failed',
+      details: 'Invalid 16-character Gmail App Password or incorrect EMAIL_USER/SMTP_USER credentials.'
+    };
+  }
+  if (code === 'ETIMEDOUT' || msg.includes('timeout')) {
+    return {
+      category: 'Network Timeout',
+      details: 'Connection to SMTP server timed out. Check firewall, network rules, or outbound port 465/587.'
+    };
+  }
+  if (code === 'ENOTFOUND' || code === 'ECONNREFUSED' || msg.includes('getaddrinfo')) {
+    return {
+      category: 'SMTP Host Unreachable',
+      details: `Unable to resolve or reach SMTP host (${process.env.SMTP_HOST || 'smtp.gmail.com'}).`
+    };
+  }
+  if (msg.includes('550') || msg.includes('Recipient rejected') || msg.includes('Invalid recipient')) {
+    return {
+      category: 'Recipient Rejected',
+      details: 'Target recipient address was rejected by the mail server.'
+    };
+  }
+  if (msg.includes('421') || msg.includes('rate limit') || msg.includes('Too many emails')) {
+    return {
+      category: 'Rate Limited',
+      details: 'Gmail/SMTP server rate limit exceeded (max 500 emails/day).'
+    };
+  }
+
+  return {
+    category: 'SMTP Transmission Failure',
+    details: msg
+  };
+}
+
+// Transporter Instantiation & Startup Verification
 function getEmailTransporter() {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const user = process.env.SMTP_USER || 'kohlirohit2428@gmail.com';
-  const rawPass = process.env.SMTP_PASS || 'pycw qgja dzyt ddyt';
-  const pass = rawPass.replace(/\s+/g, ''); // Strip whitespace from Gmail App Password (e.g. pycwqgjadzytddyt)
+  const user = process.env.EMAIL_USER || process.env.SMTP_USER || 'kohlirohit2428@gmail.com';
+  const rawPass = process.env.EMAIL_PASS || process.env.SMTP_PASS || 'pycw qgja dzyt ddyt';
+  const pass = rawPass.replace(/\s+/g, ''); // Strip spaces from Gmail App Passwords (pycwqgjadzytddyt)
 
   if (!user || !pass) {
+    console.error('❌ [SMTP Config Error] Missing Environment Variables: EMAIL_USER / EMAIL_PASS / SMTP_USER / SMTP_PASS');
     return null;
   }
 
-  // Gmail-optimized transport configuration
-  if (user.includes('@gmail.com') || host.includes('gmail')) {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '465', 10);
+
+  // If using Gmail, service: 'gmail' natively handles ports, TLS, and SSL handshakes
+  if (user.endsWith('@gmail.com') || host.includes('gmail')) {
     return nodemailer.createTransport({
       service: 'gmail',
-      auth: {
-        user,
-        pass
-      }
+      auth: { user, pass }
     });
   }
 
+  // Custom SMTP Configuration (Port 465 = secure: true, Port 587 = secure: false)
   return nodemailer.createTransport({
     host,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: false,
+    port,
+    secure: port === 465,
     auth: { user, pass },
     tls: { rejectUnauthorized: false }
   });
 }
 
-// 2. Contact Endpoint
+// Startup Verification Hook
+const transporter = getEmailTransporter();
+if (transporter) {
+  transporter.verify((error, success) => {
+    if (error) {
+      const diag = parseSmtpError(error);
+      console.error(`❌ [SMTP Transporter Verification Failed] ${diag.category}: ${diag.details}`);
+      console.error(error.stack || error);
+    } else {
+      console.log('✅ [SMTP Transporter Verified] Server is ready to dispatch emails via Nodemailer.');
+    }
+  });
+}
+
+// 2. Contact Endpoint with Retry Logic & Detailed Error Payloads
 app.post('/api/contact', async (req, res) => {
-  const { name, email, subject, message, honeypot } = req.body;
+  const clientIp = (req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
 
-  // 1. Basic bot/spam protection via hidden honeypot field
-  if (honeypot) {
-    console.warn(`[Spam Prevention] Bot detected! Honeypot filled: ${honeypot}`);
-    res.status(400).json({ error: 'Spam/bot submission detected.' });
-    return;
-  }
-
-  // 2. Validation
-  if (!name || !email || !message) {
-    res.status(400).json({ error: 'Please provide all required fields (name, email, message).' });
-    return;
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    res.status(400).json({ error: 'Please provide a valid email address.' });
-    return;
-  }
-
-  console.log(`[Contact Form Submission] Name: ${name}, Email: ${email}, Subject: ${subject || 'General'}`);
-  console.log(`[Message]: ${message}`);
-
-  const ownerEmail = process.env.PORTFOLIO_OWNER_EMAIL || 'kohlirohit2428@gmail.com';
-  const transporter = getEmailTransporter();
-
-  if (!transporter) {
-    console.warn(
-      `[Email Config Warning] SMTP environment variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) are not fully configured. ` +
-      `Simulating successful form submission. Message from ${name} (${email}): ${message}`
-    );
-    res.json({ 
-      success: true, 
-      message: 'Message recorded successfully on server. (Email delivery simulated: configure SMTP credentials to send real emails).' 
+  // 1. Rate Limiting Check
+  if (isRateLimited(clientIp)) {
+    res.status(429).json({
+      success: false,
+      message: 'Rate Limited',
+      details: 'Too many submissions from this IP address. Please wait 15 minutes before sending another inquiry.'
     });
     return;
   }
 
-  try {
-    const smtpUser = process.env.SMTP_USER;
-    const mailOptions = {
-      from: `"${name}" <${smtpUser}>`, // send via authenticated SMTP user to pass strict DMARC checks
-      replyTo: `"${name}" <${email}>`, // user can hit 'Reply' directly to email the visitor back
-      to: ownerEmail,
-      subject: `Portfolio Inquiry: ${subject || 'General touchpoint'}`,
-      text: `You received a new inquiry from your developer portfolio.\n\n` +
-            `Sender Name: ${name}\n` +
-            `Sender Email: ${email}\n` +
-            `Subject: ${subject || 'N/A'}\n\n` +
-            `Message:\n${message}\n`,
-      html: `
-        <div style="font-family: sans-serif; padding: 24px; line-height: 1.6; color: #1f2937; max-width: 600px; margin: auto; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff;">
-          <h2 style="color: #2563eb; font-size: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-top: 0;">New Portfolio Inquiry</h2>
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-              <td style="padding: 6px 0; font-weight: bold; width: 120px; color: #4b5563;">Sender Name:</td>
-              <td style="padding: 6px 0; color: #111827;">${name}</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; font-weight: bold; color: #4b5563;">Sender Email:</td>
-              <td style="padding: 6px 0;"><a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a></td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; font-weight: bold; color: #4b5563;">Subject:</td>
-              <td style="padding: 6px 0; color: #111827;">${subject || 'General'}</td>
-            </tr>
-          </table>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-          <p style="font-weight: bold; color: #4b5563; margin-bottom: 8px;">Message Content:</p>
-          <div style="background-color: #f9fafb; padding: 16px; border-radius: 12px; border-left: 4px solid #2563eb; white-space: pre-wrap; font-size: 14px; color: #374151;">${message}</div>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0 16px 0;" />
-          <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">This email was dispatched from the portfolio server contact endpoint.</p>
-        </div>
-      `
-    };
+  const { name, email, subject, message, honeypot } = req.body;
 
-    await transporter.sendMail(mailOptions);
-    console.log(`[Email Sent] Message from ${name} delivered to ${ownerEmail}`);
-    res.json({ success: true, message: 'Message sent successfully!' });
-  } catch (error: any) {
-    console.error('Nodemailer email dispatch failed:', error.message);
-    res.status(500).json({ error: 'Internal server error: failed to send email. Please try again later.' });
+  // 2. Honeypot Bot Check
+  if (honeypot) {
+    console.warn(`⚠️ [Spam Protection] Bot blocked from IP ${clientIp}. Honeypot field filled.`);
+    res.status(400).json({
+      success: false,
+      message: 'Spam Submission Detected',
+      details: 'Automated bot submission rejected.'
+    });
+    return;
   }
+
+  // 3. Input Validation
+  if (!name || name.trim().length < 2) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      details: 'Name must be at least 2 characters long.'
+    });
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email.trim())) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      details: 'Please provide a valid email address.'
+    });
+    return;
+  }
+
+  if (!message || message.trim().length < 10) {
+    res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      details: 'Message content must be at least 10 characters long.'
+    });
+    return;
+  }
+
+  // Input HTML Sanitization
+  const sanitize = (str: string) => str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const cleanName = sanitize(name.trim());
+  const cleanEmail = sanitize(email.trim());
+  const cleanSubject = sanitize(subject ? subject.trim() : 'General Opportunity');
+  const cleanMessage = sanitize(message.trim());
+
+  const ownerEmail = process.env.PORTFOLIO_OWNER_EMAIL || 'kohlirohit2428@gmail.com';
+  const smtpUser = process.env.EMAIL_USER || process.env.SMTP_USER || 'kohlirohit2428@gmail.com';
+
+  if (!transporter) {
+    console.error('❌ [SMTP Critical] Missing Environment Variables (EMAIL_USER / EMAIL_PASS)');
+    res.status(500).json({
+      success: false,
+      message: 'Missing Environment Variable',
+      details: 'EMAIL_USER or EMAIL_PASS is not configured on the backend server.'
+    });
+    return;
+  }
+
+  const timestampStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' });
+
+  const mailOptions = {
+    from: `"${cleanName}" <${smtpUser}>`,
+    replyTo: `"${cleanName}" <${cleanEmail}>`,
+    to: ownerEmail,
+    subject: `⚡ Portfolio Inquiry: ${cleanSubject}`,
+    text: `New Inquiry Received:\n\nFrom: ${cleanName} (${cleanEmail})\nSubject: ${cleanSubject}\nDate: ${timestampStr}\nIP: ${clientIp}\n\nMessage:\n${cleanMessage}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; padding: 32px 16px; color: #f8fafc;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); padding: 28px 24px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; tracking-tight: -0.025em;">
+              New Portfolio Inquiry
+            </h1>
+            <p style="color: #e2e8f0; margin: 6px 0 0 0; font-size: 13px;">
+              Dispatched from Rohit Kumar Kohli's Developer Portfolio
+            </p>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div style="padding: 24px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-weight: 600; width: 120px;">Sender Name:</td>
+                <td style="padding: 8px 0; color: #f8fafc; font-weight: 700;">${cleanName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-weight: 600;">Sender Email:</td>
+                <td style="padding: 8px 0;">
+                  <a href="mailto:${cleanEmail}" style="color: #38bdf8; text-decoration: none; font-weight: 600;">${cleanEmail}</a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-weight: 600;">Subject:</td>
+                <td style="padding: 8px 0; color: #f8fafc;">${cleanSubject}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-weight: 600;">Received At:</td>
+                <td style="padding: 8px 0; color: #cbd5e1; font-size: 12px;">${timestampStr}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #94a3b8; font-weight: 600;">Client IP:</td>
+                <td style="padding: 8px 0; color: #cbd5e1; font-family: monospace; font-size: 12px;">${clientIp}</td>
+              </tr>
+            </table>
+
+            <hr style="border: none; border-top: 1px solid #334155; margin: 20px 0;" />
+
+            <!-- Message Body -->
+            <div style="margin-bottom: 24px;">
+              <label style="display: block; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                Message Content:
+              </label>
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 18px; font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap;">
+${cleanMessage}
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div style="text-align: center; margin-top: 28px;">
+              <a href="mailto:${cleanEmail}?subject=Re: ${encodeURIComponent(cleanSubject)}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                ✉️ Reply to ${cleanName}
+              </a>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="background-color: #0f172a; padding: 16px; text-align: center; border-top: 1px solid #334155;">
+            <p style="margin: 0; font-size: 11px; color: #64748b;">
+              Automated system notification dispatched by Rohit's Portfolio Express Backend.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    `
+  };
+
+  // 4. Retry Mechanism (Up to 3 Retries with Exponential Backoff)
+  let attempts = 0;
+  const maxRetries = 3;
+  let lastError: any = null;
+
+  while (attempts < maxRetries) {
+    try {
+      attempts++;
+      console.log(`[SMTP Dispatch Attempt ${attempts}/${maxRetries}] Sending mail to ${ownerEmail}...`);
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ [Email Dispatch Success] Delivered inquiry from ${cleanName} (${cleanEmail}) to ${ownerEmail}`);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Email dispatched successfully via Nodemailer.',
+        recipient: ownerEmail
+      });
+      return;
+    } catch (sendErr: any) {
+      lastError = sendErr;
+      console.warn(`⚠️ [SMTP Dispatch Attempt ${attempts} Failed]: ${sendErr.message}`);
+      if (attempts < maxRetries) {
+        const delay = attempts * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // If retries exhausted: parse and return diagnostic payload
+  const diag = parseSmtpError(lastError);
+  console.error(`❌ [SMTP Error - Final Failure] ${diag.category}: ${diag.details}`);
+  console.error(lastError.stack || lastError);
+
+  res.status(500).json({
+    success: false,
+    message: diag.category,
+    details: diag.details
+  });
 });
 
 // 3. GitHub Proxy Endpoint
