@@ -1,0 +1,228 @@
+{
+  "owner": {
+    "name": "Rohit Kumar Kohli",
+    "title": "Full Stack Developer & Software Engineer",
+    "email": "kohlirohit2428@gmail.com",
+    "location": "Dehradun / Jaipur, India",
+    "github": "https://github.com/Rohitkohli28",
+    "linkedin": "https://linkedin.com/in/rohitkumarkohli",
+    "portfolio": "https://rohitkumarkohli.dev",
+    "resumePdf": "/Rohit_Kumar_Kohli_Resume.pdf",
+    "availability": "Yes, available for full-time Full-Stack / Software Engineering roles and internships.",
+    "strongestLanguage": "Java (90% proficiency, extensively used for core engineering, algorithms, and backend systems).",
+    "about": "Rohit Kumar Kohli is a Full-Stack Developer & Software Engineer passionate about Java, React, Node.js, Express, MongoDB, Azure, and WebSockets. Proven track record of building production-grade web applications, real-time messaging engines, healthcare portals, and AI-driven ATS tools."
+  },
+  "summary": {
+    "bio": "Rohit is a final-year CS undergrad with 8.4 CGPA, multiple software engineering internships (Celebal Tech, SmartBridge, SmartED Innovations, Microsoft Azure simulation), and 3 production full-stack projects.",
+    "strongestLanguage": "Java",
+    "totalProjects": 3,
+    "aiProjects": ["Doctor Appointment System (Gemini 3.5 Flash AI Symptom Analyzer)", "AI Resume Analyzer (ATS scoring and keyword gap engine)"],
+    "availability": "Available for internships and full-time software developer opportunities."
+  },
+  "education": [
+    {
+      "degree": "Bachelor of Technology (B.Tech) in Computer Science & Engineering",
+      "institution": "Graphic Era Hill University / Technical University",
+      "year": "2021 - 2025",
+      "grade": "8.4 CGPA",
+      "highlights": "Core coursework: Data Structures & Algorithms, Operating Systems, Database Management Systems, Computer Networks, Software Engineering, Object-Oriented Programming in Java."
+    }
+  ],
+  "skills": [
+    {
+      "category": "Programming Languages",
+      "items": [
+        { "name": "Java", "level": 90, "note": "Strongest language, algorithms & backend design" },
+        { "name": "JavaScript", "level": 88, "note": "ES6+, async/await, DOM, Node.js" },
+        { "name": "TypeScript", "level": 80, "note": "Type safety, interfaces, React TSX" },
+        { "name": "SQL", "level": 82, "note": "Relational queries, joins, indexes" }
+      ]
+    },
+    {
+      "category": "Frontend Frameworks",
+      "items": [
+        { "name": "React 19", "level": 92, "note": "Hooks, Context, Performance optimization" },
+        { "name": "Tailwind CSS", "level": 95, "note": "Custom UI design, responsiveness" },
+        { "name": "Motion / Framer Motion", "level": 85, "note": "Micro-animations & scroll reveals" }
+      ]
+    },
+    {
+      "category": "Backend & Real-Time",
+      "items": [
+        { "name": "Node.js", "level": 88, "note": "Event loop, asynchronous IO" },
+        { "name": "Express.js", "level": 85, "note": "RESTful API routes & middleware" },
+        { "name": "Socket.IO", "level": 82, "note": "Bidirectional WebSockets streaming" },
+        { "name": "JWT", "level": 84, "note": "Role-Based Access Control (RBAC) security" }
+      ]
+    },
+    {
+      "category": "Databases & Storage",
+      "items": [
+        { "name": "MongoDB", "level": 86, "note": "Document schemas, Mongoose, indexing" },
+        { "name": "MySQL", "level": 80, "note": "Relational database management" },
+        { "name": "Redis", "level": 75, "note": "Caching and session storage" }
+      ]
+    },
+    {
+      "category": "Cloud & DevOps",
+      "items": [
+        { "name": "Microsoft Azure", "level": 82, "note": "Functions, Blob Storage, App Services" },
+        { "name": "Docker", "level": 75, "note": "Containerization & Docker Compose" },
+        { "name": "ServiceNow", "level": 70, "note": "Flow Designer & ITSM workflows" }
+      ]
+    },
+    {
+      "category": "Tools & Analytics",
+      "items": [
+        { "name": "Git & GitHub", "level": 94, "note": "Version control & CI/CD workflows" },
+        { "name": "Postman", "level": 88, "note": "API testing & documentation" },
+        { "name": "Power BI", "level": 72, "note": "Data visualization & reporting" }
+      ]
+    }
+  ],
+  "experiences": [
+    {
+      "company": "Celebal Technologies",
+      "role": "Data Engineering Intern",
+      "duration": "June 2024 - August 2024",
+      "location": "Jaipur, India (Remote)",
+      "bullets": [
+        "Built ETL pipelines processing 120GB of structured data using Azure Databricks and SQL.",
+        "Implemented data transformation workflows reducing processing time by 28%.",
+        "Created interactive Power BI dashboards for direct stakeholder reporting and insights."
+      ],
+      "tech": ["SQL", "Azure Databricks", "ETL", "Power BI", "Microsoft Azure"]
+    },
+    {
+      "company": "SmartBridge",
+      "role": "ServiceNow Virtual Intern",
+      "duration": "April 2024 - May 2024",
+      "location": "Dehradun, India (Remote)",
+      "bullets": [
+        "Developed custom ServiceNow applications for IT service management (ITSM) workflows.",
+        "Automated incident management pipelines, reducing median resolution time by 35%.",
+        "Configured workflow automation, script includes, and business rules using Flow Designer."
+      ],
+      "tech": ["ServiceNow", "ITSM", "JavaScript", "Flow Designer", "Automation"]
+    },
+    {
+      "company": "SmartED Innovations",
+      "role": "Full Stack Developer Intern",
+      "duration": "December 2023 - February 2024",
+      "location": "Noida, India (Remote)",
+      "bullets": [
+        "Built and deployed 3 full-stack features using the MERN stack for 2,500+ active users.",
+        "Designed highly secure RESTful APIs with JWT authentication and role-based access control.",
+        "Improved page load performance by 40% through lazy loading, code splitting, and memoization."
+      ],
+      "tech": ["React", "Node.js", "MongoDB", "Express", "JWT", "REST APIs"]
+    },
+    {
+      "company": "Microsoft Azure",
+      "role": "Cloud Virtual Job Simulation",
+      "duration": "November 2023",
+      "location": "Remote",
+      "bullets": [
+        "Architected a serverless solution using Azure Functions, Blob Storage, and CosmosDB.",
+        "Implemented auto-scaling policies on Azure App Services, reducing simulated costs by 15%.",
+        "Deployed containerized applications using Azure Kubernetes Service (AKS)."
+      ],
+      "tech": ["Microsoft Azure", "Functions", "Blob Storage", "CosmosDB", "AKS"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "doc-appt-system",
+      "title": "Doctor Appointment System",
+      "tagline": "Healthcare platform connecting patients and doctors in real-time",
+      "description": "A comprehensive healthcare workspace that manages patient-doctor scheduling, processes subscriptions via Razorpay, enables encrypted text consultations with Socket.IO, and provides AI symptom analysis via Gemini 3.5 Flash.",
+      "tech": ["React", "Node.js", "MongoDB", "Express", "Socket.IO", "JWT", "Razorpay", "Gemini AI"],
+      "github": "https://github.com/Rohitkohli28/doctor-appointment-system",
+      "demo": "https://rohit-healthcare-appointment.vercel.app",
+      "image": "/doc-appt-system.png",
+      "usesAI": true,
+      "aiDetails": "Uses Google Gemini 3.5 Flash API for clinical symptom analysis, urgency classification, and specialist recommendations.",
+      "status": "live"
+    },
+    {
+      "id": "ai-resume-analyzer",
+      "title": "AI Resume Analyzer",
+      "tagline": "ATS-optimized resume scoring and improvement engine",
+      "description": "An advanced software tool designed to give job-seekers deep keyword gaps analysis, ATS compatibility scoring (0-100), and section-by-section improvement suggestions using AI.",
+      "tech": ["React", "Node.js", "Docker", "Gemini AI", "PDF.js", "Redis", "REST API"],
+      "github": "https://github.com/Rohitkohli28/ai-resume-analyzer",
+      "image": "/ai-resume-analyzer.png",
+      "usesAI": true,
+      "aiDetails": "Uses Google Gemini API for ATS document evaluation, entity classification, and keyword gap analysis.",
+      "status": "live"
+    },
+    {
+      "id": "real-time-chat-app",
+      "title": "Real-Time Chat Application",
+      "tagline": "MERN Chat with Voice Commands & WebSockets",
+      "description": "A full-stack communication platform equipped with a Voice Command engine utilizing the Web Speech API, Socket.io WebSockets, dynamic chat rooms, typing indicators, read receipts, and message deletion.",
+      "tech": ["React", "Node.js", "Socket.io", "MongoDB", "JWT", "Web Speech API", "Tailwind CSS"],
+      "github": "https://github.com/Rohitkohli28/real-time-chat-app",
+      "demo": "https://rohit-chat-app.vercel.app",
+      "image": "/real-time-chat-app.png",
+      "usesAI": false,
+      "aiDetails": "Uses Web Speech API for voice command recognition and Socket.IO for real-time WebSocket messaging.",
+      "status": "live"
+    }
+  ],
+  "certifications": [
+    {
+      "id": "gcloud-hack",
+      "title": "Google Cloud Hackathon - Top National Rank",
+      "issuer": "Google Cloud",
+      "year": "2024",
+      "impact": "Recognized in top national ranks for building an AI educational tool with Gemini API."
+    },
+    {
+      "id": "elite-coder",
+      "title": "Elite Coders Winter of Code",
+      "issuer": "Algorithmic Bootcamp",
+      "year": "2023",
+      "impact": "Top performer for executing high-efficiency Java data structure algorithms."
+    },
+    {
+      "id": "azure-developer",
+      "title": "Microsoft Certified: Azure Developer Associate",
+      "issuer": "Microsoft",
+      "year": "2024",
+      "impact": "Validated expertise in designing, building, and maintaining cloud APIs on Azure."
+    },
+    {
+      "id": "meta-frontend",
+      "title": "Meta Frontend Developer Certificate",
+      "issuer": "Coursera / Meta",
+      "year": "2023",
+      "impact": "Professional certification covering React patterns, Jest unit testing, and UI design."
+    },
+    {
+      "id": "servicenow-cert",
+      "title": "ServiceNow Certified Developer",
+      "issuer": "ServiceNow",
+      "year": "2024",
+      "impact": "Certified platform developer credentials for script inclusions, Flow Designer, and custom widgets."
+    }
+  ],
+  "faqs": [
+    {
+      "question": "Which language are you strongest in?",
+      "answer": "Rohit is strongest in Java (90% proficiency). He uses Java extensively for core software engineering, data structures & algorithms, object-oriented design, and high-performance backend systems."
+    },
+    {
+      "question": "Which project uses AI?",
+      "answer": "Two of Rohit's projects use AI:\n1. **Doctor Appointment System**: Integrates Google Gemini 3.5 Flash for real-time clinical symptom analysis, urgency classification, and specialist recommendations.\n2. **AI Resume Analyzer**: Uses Gemini AI for ATS resume scoring (0-100), section improvement feedback, and keyword gap analysis."
+    },
+    {
+      "question": "How many projects have you completed?",
+      "answer": "Rohit has completed 3 major production full-stack applications:\n1. Doctor Appointment System (Live at https://rohit-healthcare-appointment.vercel.app)\n2. AI Resume Analyzer\n3. Real-Time Chat Application (Live at https://rohit-chat-app.vercel.app)"
+    },
+    {
+      "question": "Are you available for internships?",
+      "answer": "Yes! Rohit is actively available for full-time Software Engineer, Full Stack Developer, and Data Engineering roles as well as internships."
+    }
+  ]
+}
