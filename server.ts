@@ -23,7 +23,9 @@ try {
   const imageMap: Record<string, string> = {
     'doctor_appointment_preview_1784698503509.png': 'doc-appt-system.png',
     'ai_resume_analyzer_preview_1784698516147.png': 'ai-resume-analyzer.png',
-    'real_time_chat_preview_1784698530061.png': 'real-time-chat-app.png'
+    'real_time_chat_preview_1784698530061.png': 'real-time-chat-app.png',
+    'media__1784705948880.png': 'favicon.png',
+    'media__1784705948880.png': 'rkk-logo.png'
   };
 
   for (const [srcName, destName] of Object.entries(imageMap)) {
