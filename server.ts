@@ -20,20 +20,35 @@ try {
     fs.mkdirSync(publicDir, { recursive: true });
   }
 
-  const imageMap: Record<string, string> = {
-    'doctor_appointment_preview_1784698503509.png': 'doc-appt-system.png',
-    'ai_resume_analyzer_preview_1784698516147.png': 'ai-resume-analyzer.png',
-    'real_time_chat_preview_1784698530061.png': 'real-time-chat-app.png',
-    'media__1784705948880.png': 'favicon.png',
-    'media__1784705948880.png': 'rkk-logo.png'
-  };
+  const syncItems = [
+    { src: 'doctor_appointment_preview_1784698503509.png', dest: 'doc-appt-system.png' },
+    { src: 'ai_resume_analyzer_preview_1784698516147.png', dest: 'ai-resume-analyzer.png' },
+    { src: 'real_time_chat_preview_1784698530061.png', dest: 'real-time-chat-app.png' }
+  ];
 
-  for (const [srcName, destName] of Object.entries(imageMap)) {
-    const srcPath = path.join(brainDir, srcName);
-    const destPath = path.join(publicDir, destName);
+  for (const item of syncItems) {
+    const srcPath = path.join(brainDir, item.src);
+    const destPath = path.join(publicDir, item.dest);
     if (fs.existsSync(srcPath)) {
       fs.copyFileSync(srcPath, destPath);
-      console.log(`[Asset Sync] Synced asset ${srcName} -> public/${destName}`);
+      console.log(`[Asset Sync] Synced asset ${item.src} -> public/${item.dest}`);
+    }
+  }
+
+  // Find latest uploaded logo image in brain directory
+  if (fs.existsSync(brainDir)) {
+    const files = fs.readdirSync(brainDir);
+    const mediaFiles = files
+      .filter(f => f.startsWith('media__') && f.endsWith('.png'))
+      .sort((a, b) => fs.statSync(path.join(brainDir, b)).mtimeMs - fs.statSync(path.join(brainDir, a)).mtimeMs);
+
+    if (mediaFiles.length > 0) {
+      const latestLogo = mediaFiles[0];
+      const srcLogo = path.join(brainDir, latestLogo);
+      fs.copyFileSync(srcLogo, path.join(publicDir, 'favicon.png'));
+      fs.copyFileSync(srcLogo, path.join(publicDir, 'favicon.ico'));
+      fs.copyFileSync(srcLogo, path.join(publicDir, 'rkk-logo.png'));
+      console.log(`[Asset Sync] Successfully synced RKK logo (${latestLogo}) -> public/favicon.png & favicon.ico`);
     }
   }
 } catch (err) {
@@ -64,6 +79,49 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// Sync Favicon Assets on server startup & request
+function ensureFavicons() {
+  try {
+    const brainDir = 'C:\\Users\\Rohit\\.gemini\\antigravity-ide\\brain\\c026dbfd-6c6b-4c99-9fad-e6583e0fd709';
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    if (fs.existsSync(brainDir)) {
+      const files = fs.readdirSync(brainDir);
+      const mediaFiles = files
+        .filter(f => f.startsWith('media__') && f.endsWith('.png'))
+        .sort((a, b) => fs.statSync(path.join(brainDir, b)).mtimeMs - fs.statSync(path.join(brainDir, a)).mtimeMs);
+
+      if (mediaFiles.length > 0) {
+        const latestLogo = mediaFiles[0];
+        const srcLogo = path.join(brainDir, latestLogo);
+        fs.copyFileSync(srcLogo, path.join(publicDir, 'favicon.png'));
+        fs.copyFileSync(srcLogo, path.join(publicDir, 'favicon.ico'));
+        fs.copyFileSync(srcLogo, path.join(publicDir, 'rkk-logo.png'));
+      }
+    }
+  } catch (err) {
+    console.warn('[Favicon Sync Warning]', err);
+  }
+}
+
+app.use((req, res, next) => {
+  ensureFavicons();
+  next();
+});
+
+// Favicon & RKK Logo Image Routes
+app.get(['/favicon.png', '/favicon.ico', '/rkk-logo.png'], (req, res) => {
+  const logoPath = 'C:\\Users\\Rohit\\.gemini\\antigravity-ide\\brain\\c026dbfd-6c6b-4c99-9fad-e6583e0fd709\\media__1784706292643.png';
+  if (fs.existsSync(logoPath)) {
+    res.setHeader('Content-Type', 'image/png');
+    res.sendFile(logoPath);
+  } else {
+    res.status(404).send('Logo image not found');
+  }
+});
 
 // Project Image Preview Routes
 app.get('/doc-appt-system.png', (req, res) => {
