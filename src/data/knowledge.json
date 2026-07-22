@@ -223,6 +223,10 @@
     {
       "question": "Are you available for internships?",
       "answer": "Yes! Rohit is actively available for full-time Software Engineer, Full Stack Developer, and Data Engineering roles as well as internships."
+    },
+    {
+      "question": "Tell me about your LeetCode progress and stats",
+      "answer": "Rohit has solved **360 problems** on LeetCode (185 Easy, 160 Medium, 15 Hard) with an active **136-day streak**, 162 total active solving days, and a global ranking of **#363,253** under profile u/Rohit2028."
     }
   ]
 }

@@ -44,7 +44,7 @@ export default function LeetcodeActivity() {
         const cachedLc = localStorage.getItem(CACHE_KEY_LC);
         if (cachedLc) {
           const { data, timestamp } = JSON.parse(cachedLc);
-          if (Date.now() - timestamp < CACHE_TTL) {
+          if (Date.now() - timestamp < CACHE_TTL && data && data.totalSolved >= 360) {
             finalLc = data;
           } else {
             finalLc = await fetch('/api/leetcode').then(r => r.json());
@@ -83,10 +83,10 @@ export default function LeetcodeActivity() {
   const totalHardCount = 710;
   const totalAllCount = totalEasyCount + totalMediumCount + totalHardCount;
 
-  const easySolved = lcData?.easySolved ?? 182;
-  const mediumSolved = lcData?.mediumSolved ?? 140;
-  const hardSolved = lcData?.hardSolved ?? 30;
-  const totalSolved = lcData?.totalSolved ?? 352;
+  const easySolved = lcData?.easySolved ?? 185;
+  const mediumSolved = lcData?.mediumSolved ?? 160;
+  const hardSolved = lcData?.hardSolved ?? 15;
+  const totalSolved = lcData?.totalSolved ?? 360;
 
   const easyPercent = Math.min(100, Math.round((easySolved / totalEasyCount) * 100));
   const mediumPercent = Math.min(100, Math.round((mediumSolved / totalMediumCount) * 100));
@@ -96,6 +96,18 @@ export default function LeetcodeActivity() {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const progressOffset = circumference * (1 - totalSolved / totalAllCount);
+
+  const defaultSubmissions = [
+    { title: 'Interval List Intersections', difficulty: 'Medium', status: 'Accepted', date: '22h ago', url: 'https://leetcode.com/problems/interval-list-intersections/' },
+    { title: 'Network Recovery Pathways', difficulty: 'Medium', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/network-recovery-pathways/' },
+    { title: 'Number of Paths with Max Score', difficulty: 'Hard', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/number-of-paths-with-max-score/' },
+    { title: 'Rank Scores', difficulty: 'Medium', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/rank-scores/' },
+    { title: 'Two Sum', difficulty: 'Easy', status: 'Accepted', date: '2d ago', url: 'https://leetcode.com/problems/two-sum/' }
+  ];
+
+  const submissionsToDisplay = (lcData?.recentSubmissions && lcData.recentSubmissions.length > 0)
+    ? lcData.recentSubmissions
+    : defaultSubmissions;
 
   return (
     <section
@@ -147,7 +159,7 @@ export default function LeetcodeActivity() {
             <div className="flex flex-wrap items-center gap-4 font-mono text-xs">
               <div className="px-3.5 py-1.5 rounded-xl bg-bg border border-border/85">
                 <span className="text-muted">RANKING: </span>
-                <span className="text-text font-bold">#{lcData?.ranking.toLocaleString() ?? '184,512'}</span>
+                <span className="text-text font-bold">#{lcData?.ranking?.toLocaleString() ?? '363,253'}</span>
               </div>
               
               <a
@@ -214,12 +226,12 @@ export default function LeetcodeActivity() {
               <div className="flex items-center gap-6 justify-center w-full pt-4 border-t border-border/55 text-xs font-mono text-muted">
                 <div className="flex items-center gap-2">
                   <Flame size={14} className="text-[#f35f22]" />
-                  <span>Streak: <b className="text-text">{lcData?.streak ?? 15}d</b></span>
+                  <span>Streak: <b className="text-text">{lcData?.streak ?? 136}d</b></span>
                 </div>
                 <div className="w-px h-4 bg-border/60" />
                 <div className="flex items-center gap-2">
                   <Calendar size={14} className="text-[#ffa116]" />
-                  <span>Active: <b className="text-text">{lcData?.totalActiveDays ?? 145}d</b></span>
+                  <span>Active: <b className="text-text">{lcData?.totalActiveDays ?? 162}d</b></span>
                 </div>
               </div>
             </div>
@@ -315,33 +327,39 @@ export default function LeetcodeActivity() {
             <h4 className="font-mono text-xs text-muted uppercase tracking-wider">Recent Verified Submissions</h4>
             <div className="glass-card rounded-2xl p-5 md:p-6">
               <div className="divide-y divide-border/40 space-y-3">
-                {(lcData?.recentSubmissions ?? []).slice(0, 5).map((sub, sIdx) => (
-                  <div
-                    key={sIdx}
-                    className="flex items-center justify-between gap-4 text-xs font-mono py-2.5 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
-                        <CheckCircle2 size={12} />
+                {submissionsToDisplay.slice(0, 5).map((sub: any, sIdx: number) => {
+                  const targetUrl = sub.url || `https://leetcode.com/problems/${sub.title.toLowerCase().replace(/ /g, '-')}/`;
+                  return (
+                    <a
+                      key={sIdx}
+                      href={targetUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between gap-4 text-xs font-mono py-2.5 first:pt-0 last:pb-0 group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                          <CheckCircle2 size={12} />
+                        </div>
+                        <span className="text-text-sub font-semibold truncate group-hover:text-[#ffa116] transition-colors">
+                          {sub.title}
+                        </span>
                       </div>
-                      <span className="text-text-sub font-semibold truncate hover:text-[#ffa116] transition-colors">
-                        {sub.title}
-                      </span>
-                    </div>
 
-                    <div className="flex items-center gap-4 shrink-0">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        sub.difficulty === 'Hard' ? 'text-red-400 bg-red-500/8 border border-red-500/10' :
-                        sub.difficulty === 'Medium' ? 'text-amber-400 bg-amber-500/8 border border-amber-500/10' :
-                        'text-emerald-400 bg-emerald-500/8 border border-emerald-500/10'
-                      }`}>
-                        {sub.difficulty}
-                      </span>
-                      <span className="text-[11px] text-muted">{sub.date}</span>
-                      <ChevronRight size={14} className="text-muted/65" />
-                    </div>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-4 shrink-0">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          sub.difficulty === 'Hard' ? 'text-red-400 bg-red-500/8 border border-red-500/10' :
+                          sub.difficulty === 'Medium' ? 'text-amber-400 bg-amber-500/8 border border-amber-500/10' :
+                          'text-emerald-400 bg-emerald-500/8 border border-emerald-500/10'
+                        }`}>
+                          {sub.difficulty}
+                        </span>
+                        <span className="text-[11px] text-muted">{sub.date}</span>
+                        <ChevronRight size={14} className="text-muted/65 group-hover:text-[#ffa116] group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </div>

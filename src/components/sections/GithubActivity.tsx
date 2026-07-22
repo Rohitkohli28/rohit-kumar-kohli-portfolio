@@ -322,7 +322,35 @@ export default function GithubActivity() {
           <div className="space-y-4">
             <h4 className="font-mono text-xs text-muted uppercase tracking-wider">Featured Repositories</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {ghData?.repos.slice(0, 3).map((repo) => (
+              {((ghData?.repos && ghData.repos.length > 0) ? ghData.repos : [
+                {
+                  id: 1,
+                  name: 'rohit-kumar-kohli-portfolio',
+                  description: 'Full-stack React 19 portfolio & AI assistant powered by Google Gemini 3.5 Flash & Express.',
+                  stargazers_count: 1,
+                  forks_count: 0,
+                  language: 'TypeScript',
+                  html_url: 'https://github.com/Rohitkohli28/rohit-kumar-kohli-portfolio'
+                },
+                {
+                  id: 2,
+                  name: 'doctor-appointment-system',
+                  description: 'React-Node healthcare scheduling platform with Socket.IO channels & Gemini symptom analysis.',
+                  stargazers_count: 8,
+                  forks_count: 2,
+                  language: 'TypeScript',
+                  html_url: 'https://github.com/Rohitkohli28/doctor-appointment-system'
+                },
+                {
+                  id: 3,
+                  name: 'real-time-chat-app',
+                  description: 'Real-time WebSocket chat app integrated with Web Speech API voice controls.',
+                  stargazers_count: 5,
+                  forks_count: 1,
+                  language: 'JavaScript',
+                  html_url: 'https://github.com/Rohitkohli28/real-time-chat-app'
+                }
+              ]).slice(0, 3).map((repo) => (
                 <a
                   key={repo.id}
                   href={repo.html_url}

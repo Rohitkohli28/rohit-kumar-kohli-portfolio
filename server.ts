@@ -573,21 +573,21 @@ app.get('/api/leetcode', async (req, res) => {
 
     res.json({
       fallback: true,
-      totalQuestions: 3100,
-      totalSolved: 352,
-      easySolved: 182,
-      mediumSolved: 140,
-      hardSolved: 30,
-      ranking: 184512,
+      totalQuestions: 3180,
+      totalSolved: 360,
+      easySolved: 185,
+      mediumSolved: 160,
+      hardSolved: 15,
+      ranking: 363253,
       userAvatar: 'https://assets.leetcode.com/users/default_avatar.png',
-      streak: 15,
-      totalActiveDays: 145,
+      streak: 136,
+      totalActiveDays: 162,
       recentSubmissions: [
-        { title: 'Merge k Sorted Lists', difficulty: 'Hard', status: 'Accepted', date: '2 days ago' },
-        { title: 'Container With Most Water', difficulty: 'Medium', status: 'Accepted', date: '4 days ago' },
-        { title: 'Two Sum', difficulty: 'Easy', status: 'Accepted', date: '1 week ago' },
-        { title: 'Longest Palindromic Substring', difficulty: 'Medium', status: 'Accepted', date: '2 weeks ago' },
-        { title: 'Median of Two Sorted Arrays', difficulty: 'Hard', status: 'Accepted', date: '3 weeks ago' }
+        { title: 'Interval List Intersections', difficulty: 'Medium', status: 'Accepted', date: '22h ago', url: 'https://leetcode.com/problems/interval-list-intersections/' },
+        { title: 'Network Recovery Pathways', difficulty: 'Medium', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/network-recovery-pathways/' },
+        { title: 'Number of Paths with Max Score', difficulty: 'Hard', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/number-of-paths-with-max-score/' },
+        { title: 'Rank Scores', difficulty: 'Medium', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/rank-scores/' },
+        { title: 'Two Sum', difficulty: 'Easy', status: 'Accepted', date: '2d ago', url: 'https://leetcode.com/problems/two-sum/' }
       ],
       submissionCalendar: fallbackCalendar
     });
