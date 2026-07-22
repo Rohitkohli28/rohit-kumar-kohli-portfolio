@@ -167,23 +167,32 @@ app.get('/api/health', (req, res) => {
 
 // Nodemailer transport lazy loader
 function getEmailTransporter() {
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const user = process.env.SMTP_USER || 'kohlirohit2428@gmail.com';
+  const rawPass = process.env.SMTP_PASS || 'pycw qgja dzyt ddyt';
+  const pass = rawPass.replace(/\s+/g, ''); // Strip whitespace from Gmail App Password (e.g. pycwqgjadzytddyt)
 
-  if (!host || !port || !user || !pass) {
+  if (!user || !pass) {
     return null;
+  }
+
+  // Gmail-optimized transport configuration
+  if (user.includes('@gmail.com') || host.includes('gmail')) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user,
+        pass
+      }
+    });
   }
 
   return nodemailer.createTransport({
     host,
-    port: parseInt(port, 10),
-    secure: parseInt(port, 10) === 465, // true for 465, false for 587/other ports
-    auth: {
-      user,
-      pass
-    }
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: false,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false }
   });
 }
 
