@@ -507,15 +507,15 @@ app.get('/api/github', async (req, res) => {
     let lastErr: any;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const res = await fetch(url, options);
-        if (res.ok) return res;
-        if (res.status === 403 || res.status === 429) {
-          console.warn(`[GitHub API] Attempt ${attempt}/${maxRetries} rate-limited (${res.status}). Retrying in ${attempt * 1000}ms...`);
+        const apiRes = await fetch(url, options);
+        if (apiRes.ok) return apiRes;
+        if (apiRes.status === 403 || apiRes.status === 429) {
+          console.warn(`[GitHub API] Attempt ${attempt}/${maxRetries} rate-limited (${apiRes.status}). Retrying in ${attempt * 1000}ms...`);
           await new Promise(r => setTimeout(r, attempt * 1000));
-          lastErr = new Error(`GitHub rate limited: ${res.status}`);
+          lastErr = new Error(`GitHub rate limited: ${apiRes.status}`);
           continue;
         }
-        throw new Error(`GitHub API error: ${res.status}`);
+        throw new Error(`GitHub API error: ${apiRes.status}`);
       } catch (err) {
         lastErr = err;
         if (attempt < maxRetries) await new Promise(r => setTimeout(r, attempt * 1000));
