@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Award, CheckCircle2, ChevronRight, ExternalLink, Calendar, Flame, Target, Info } from 'lucide-react';
+import { Award, CheckCircle2, ChevronRight, ExternalLink, Calendar, Flame, Target, WifiOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface LeetCodeData {
@@ -27,37 +27,86 @@ interface LeetCodeData {
 }
 
 const CACHE_KEY_LC = 'portfolio_leetcode_cache';
-const CACHE_TTL = 3600 * 1000; // 1 hour
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes — refresh frequently for live data
+
+/** Returns a human-readable "X min ago" label from a Date */
+function syncLabel(date: Date | null): string {
+  if (!date) return '';
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs < 60_000) return 'just now';
+  if (diffMs < 3_600_000) return `${Math.floor(diffMs / 60_000)} min ago`;
+  return `${Math.floor(diffMs / 3_600_000)}h ago`;
+}
 
 export default function LeetcodeActivity() {
   const [lcData, setLcData] = useState<LeetCodeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [syncTime, setSyncTime] = useState<Date | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
-      setErrorStatus(null);
+      setIsOffline(false);
 
+      // ── Step 1: Check fresh localStorage cache (< 5 min old AND was live data) ──
       try {
-        let finalLc: LeetCodeData;
-        const cachedLc = localStorage.getItem(CACHE_KEY_LC);
-        if (cachedLc) {
-          const { data, timestamp } = JSON.parse(cachedLc);
-          if (Date.now() - timestamp < CACHE_TTL && data && data.totalSolved >= 360) {
-            finalLc = data;
-          } else {
-            finalLc = await fetch('/api/leetcode').then(r => r.json());
-            localStorage.setItem(CACHE_KEY_LC, JSON.stringify({ data: finalLc, timestamp: Date.now() }));
+        const cachedRaw = localStorage.getItem(CACHE_KEY_LC);
+        if (cachedRaw) {
+          const { data, timestamp, wasFallback } = JSON.parse(cachedRaw);
+          const age = Date.now() - timestamp;
+          if (age < CACHE_TTL && data && !wasFallback) {
+            setLcData(data);
+            setSyncTime(new Date(timestamp));
+            setIsLoading(false);
+            return;
           }
-        } else {
-          finalLc = await fetch('/api/leetcode').then(r => r.json());
-          localStorage.setItem(CACHE_KEY_LC, JSON.stringify({ data: finalLc, timestamp: Date.now() }));
         }
-        setLcData(finalLc);
+      } catch (_) { /* corrupt cache — ignore and re-fetch */ }
+
+      // ── Step 2: Fetch fresh data from server-side proxy ──
+      try {
+        const response = await fetch('/api/leetcode', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`LeetCode API proxy returned ${response.status}`);
+        const json = await response.json();
+
+        const isFallback = json.fallback === true;
+        setIsOffline(isFallback);
+
+        const freshData: LeetCodeData = {
+          totalQuestions: json.totalQuestions,
+          totalSolved: json.totalSolved,
+          easySolved: json.easySolved,
+          mediumSolved: json.mediumSolved,
+          hardSolved: json.hardSolved,
+          ranking: json.ranking,
+          userAvatar: json.userAvatar,
+          streak: json.streak,
+          totalActiveDays: json.totalActiveDays,
+          recentSubmissions: json.recentSubmissions || [],
+          submissionCalendar: json.submissionCalendar || {}
+        };
+        setLcData(freshData);
+        setSyncTime(new Date());
+
+        // Cache result; mark wasFallback so next visit re-fetches if stale
+        localStorage.setItem(CACHE_KEY_LC, JSON.stringify({
+          data: freshData,
+          timestamp: Date.now(),
+          wasFallback: isFallback
+        }));
       } catch (err: any) {
-        console.error('Failed to resolve live LeetCode API:', err.message);
-        setErrorStatus('Displaying cached portfolio stats (API offline mode).');
+        console.error('[LeetCode] Network/proxy error:', err.message);
+        // ── Step 3: Use any available cached data as last resort ──
+        try {
+          const cachedRaw = localStorage.getItem(CACHE_KEY_LC);
+          if (cachedRaw) {
+            const { data } = JSON.parse(cachedRaw);
+            if (data) setLcData(data);
+          }
+        } catch (_) {}
+        setIsOffline(true);
+        setSyncTime(null);
       } finally {
         setIsLoading(false);
       }
@@ -119,7 +168,7 @@ export default function LeetcodeActivity() {
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-16">
           <div className="text-[#ffa116] font-mono text-xs tracking-[0.25em] uppercase mb-4">
-            // ALGORITHMS & PROBLEM SOLVING
+            // ALGORITHMS &amp; PROBLEM SOLVING
           </div>
           <h2 className="font-display font-black text-3xl md:text-5xl text-text mb-4">
             LeetCode Activity
@@ -127,11 +176,22 @@ export default function LeetcodeActivity() {
           <p className="text-sm text-muted">
             Tracking verified algorithmic milestones, problem categories, and submission streaks.
           </p>
-          {errorStatus && (
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/8 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase">
-              <Info size={12} /> {errorStatus}
-            </div>
-          )}
+
+          {/* Live / Offline status badge */}
+          <div className="mt-4 flex justify-center">
+            {isOffline ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/8 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase">
+                <WifiOff size={11} />
+                Offline — using last synced data
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-mono text-[10px] uppercase">
+                <CheckCircle2 size={11} />
+                Live
+                {syncTime && <span className="text-emerald-500/70">• Last synced {syncLabel(syncTime)}</span>}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Dashboard Layout */}

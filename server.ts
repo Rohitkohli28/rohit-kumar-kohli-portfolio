@@ -173,9 +173,14 @@ app.get('/api/health', (req, res) => {
 const ipRateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function isRateLimited(ip: string): boolean {
+  // Never rate limit localhost or loopback development testing
+  if (ip === '127.0.0.1' || ip === '::1' || ip.includes('localhost') || ip === '::ffff:127.0.0.1') {
+    return false;
+  }
+
   const now = Date.now();
   const windowMs = 15 * 60 * 1000;
-  const limit = 3;
+  const limit = 10; // Increased limit for normal user sessions
 
   const record = ipRateLimitMap.get(ip);
   if (!record) {
@@ -238,7 +243,7 @@ function parseSmtpError(error: any): { category: string; details: string } {
   };
 }
 
-// Transporter Instantiation & Startup Verification
+// Transporter Factory Function
 function getEmailTransporter() {
   const user = process.env.EMAIL_USER || process.env.SMTP_USER || 'kohlirohit2428@gmail.com';
   const rawPass = process.env.EMAIL_PASS || process.env.SMTP_PASS || 'pycw qgja dzyt ddyt';
@@ -350,7 +355,9 @@ app.post('/api/contact', async (req, res) => {
   const ownerEmail = process.env.PORTFOLIO_OWNER_EMAIL || 'kohlirohit2428@gmail.com';
   const smtpUser = process.env.EMAIL_USER || process.env.SMTP_USER || 'kohlirohit2428@gmail.com';
 
-  if (!transporter) {
+  const activeTransporter = getEmailTransporter();
+
+  if (!activeTransporter) {
     console.error('❌ [SMTP Critical] Missing Environment Variables (EMAIL_USER / EMAIL_PASS)');
     res.status(500).json({
       success: false,
@@ -372,9 +379,8 @@ app.post('/api/contact', async (req, res) => {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; padding: 32px 16px; color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
           
-          <!-- Header -->
           <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); padding: 28px 24px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; tracking-tight: -0.025em;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">
               New Portfolio Inquiry
             </h1>
             <p style="color: #e2e8f0; margin: 6px 0 0 0; font-size: 13px;">
@@ -382,7 +388,6 @@ app.post('/api/contact', async (req, res) => {
             </p>
           </div>
 
-          <!-- Metadata Grid -->
           <div style="padding: 24px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
               <tr>
@@ -411,28 +416,23 @@ app.post('/api/contact', async (req, res) => {
 
             <hr style="border: none; border-top: 1px solid #334155; margin: 20px 0;" />
 
-            <!-- Message Body -->
             <div style="margin-bottom: 24px;">
-              <label style="display: block; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+              <label style="display: block; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">
                 Message Content:
               </label>
-              <div style="background-color: #0f172a; border: 1px solid #334155; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 18px; font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap;">
-${cleanMessage}
-              </div>
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 18px; font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap;">${cleanMessage}</div>
             </div>
 
-            <!-- Action Button -->
             <div style="text-align: center; margin-top: 28px;">
-              <a href="mailto:${cleanEmail}?subject=Re: ${encodeURIComponent(cleanSubject)}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+              <a href="mailto:${cleanEmail}?subject=Re: ${encodeURIComponent(cleanSubject)}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 700;">
                 ✉️ Reply to ${cleanName}
               </a>
             </div>
           </div>
 
-          <!-- Footer -->
           <div style="background-color: #0f172a; padding: 16px; text-align: center; border-top: 1px solid #334155;">
             <p style="margin: 0; font-size: 11px; color: #64748b;">
-              Automated system notification dispatched by Rohit's Portfolio Express Backend.
+              Automated notification dispatched by Rohit's Portfolio Express Backend.
             </p>
           </div>
 
@@ -441,7 +441,7 @@ ${cleanMessage}
     `
   };
 
-  // 4. Retry Mechanism (Up to 3 Retries with Exponential Backoff)
+  // Retry Mechanism (Up to 3 Retries with Exponential Backoff)
   let attempts = 0;
   const maxRetries = 3;
   let lastError: any = null;
@@ -450,12 +450,13 @@ ${cleanMessage}
     try {
       attempts++;
       console.log(`[SMTP Dispatch Attempt ${attempts}/${maxRetries}] Sending mail to ${ownerEmail}...`);
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ [Email Dispatch Success] Delivered inquiry from ${cleanName} (${cleanEmail}) to ${ownerEmail}`);
+      const sendResult = await activeTransporter.sendMail(mailOptions);
+      console.log(`✅ [Email Dispatch Success] MessageID: ${sendResult.messageId} | Response: ${sendResult.response}`);
       
       res.status(200).json({
         success: true,
         message: 'Email dispatched successfully via Nodemailer.',
+        messageId: sendResult.messageId,
         recipient: ownerEmail
       });
       return;
@@ -481,32 +482,65 @@ ${cleanMessage}
   });
 });
 
-// 3. GitHub Proxy Endpoint
+// 3. GitHub Proxy Endpoint (with auth token support, retry logic, and no-store cache headers)
 app.get('/api/github', async (req, res) => {
-  try {
-    const userRes = await fetch('https://api.github.com/users/Rohitkohli28', {
-      headers: { 'User-Agent': 'aistudio-portfolio-agent' }
-    });
-    
-    if (!userRes.ok) {
-      throw new Error(`GitHub API returned status ${userRes.status}`);
+  // Prevent Vercel edge / CDN from caching this API response
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  // Build GitHub API request headers — use GITHUB_TOKEN if available to get 5000 req/hr instead of 60
+  const ghHeaders: Record<string, string> = {
+    'User-Agent': 'rohit-portfolio-agent',
+    'Accept': 'application/vnd.github.v3+json'
+  };
+  const ghToken = process.env.GITHUB_TOKEN;
+  if (ghToken) {
+    ghHeaders['Authorization'] = `Bearer ${ghToken}`;
+    console.log('[GitHub API] Using authenticated token (5000 req/hr limit)');
+  } else {
+    console.warn('[GitHub API] No GITHUB_TOKEN set — using unauthenticated (60 req/hr limit)');
+  }
+
+  // Helper with retry: attempts up to maxRetries before throwing
+  async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
+    let lastErr: any;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const res = await fetch(url, options);
+        if (res.ok) return res;
+        if (res.status === 403 || res.status === 429) {
+          console.warn(`[GitHub API] Attempt ${attempt}/${maxRetries} rate-limited (${res.status}). Retrying in ${attempt * 1000}ms...`);
+          await new Promise(r => setTimeout(r, attempt * 1000));
+          lastErr = new Error(`GitHub rate limited: ${res.status}`);
+          continue;
+        }
+        throw new Error(`GitHub API error: ${res.status}`);
+      } catch (err) {
+        lastErr = err;
+        if (attempt < maxRetries) await new Promise(r => setTimeout(r, attempt * 1000));
+      }
     }
-    
+    throw lastErr;
+  }
+
+  try {
+    const [userRes, reposRes] = await Promise.all([
+      fetchWithRetry('https://api.github.com/users/Rohitkohli28', { headers: ghHeaders }),
+      fetchWithRetry('https://api.github.com/users/Rohitkohli28/repos?sort=updated&per_page=6', { headers: ghHeaders })
+    ]);
+
     const userData = await userRes.json();
-    
-    // Fetch repositories
-    const reposRes = await fetch('https://api.github.com/users/Rohitkohli28/repos?sort=updated&per_page=6', {
-      headers: { 'User-Agent': 'aistudio-portfolio-agent' }
-    });
-    const reposData = reposRes.ok ? await reposRes.json() : [];
+    const reposData = await reposRes.json();
 
     // Fetch real-time contribution calendar from public contributions page
     let contributionsList: number[] = [];
-    let totalContributions = 422;
+    let totalContributions: number = userData.public_repos ? 0 : 422;
     try {
       const contribsRes = await fetch('https://github.com/users/Rohitkohli28/contributions', {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html'
         }
       });
       if (contribsRes.ok) {
@@ -519,30 +553,26 @@ app.get('/api/github', async (req, res) => {
           const dateMatch = tag.match(/data-date="([\d-]+)"/);
           const levelMatch = tag.match(/data-level="(\d+)"/);
           if (dateMatch && levelMatch) {
-            days.push({
-              date: dateMatch[1],
-              level: parseInt(levelMatch[1], 10)
-            });
+            days.push({ date: dateMatch[1], level: parseInt(levelMatch[1], 10) });
           }
         }
-        
-        // Extract total contribution text (e.g. "308 contributions in the last year")
         const totalMatch = html.match(/([\d,]+)\s+contributions\s+in\s+the\s+last\s+year/);
         if (totalMatch) {
           totalContributions = parseInt(totalMatch[1].replace(/,/g, ''), 10);
         } else if (days.length > 0) {
-          totalContributions = days.reduce((sum, d) => sum + (d.level > 0 ? 1 : 0), 0); // fallback estimation
+          totalContributions = days.reduce((sum, d) => sum + (d.level > 0 ? 1 : 0), 0);
         }
-        
-        // Sort chronologically and extract levels
         days.sort((a, b) => a.date.localeCompare(b.date));
         contributionsList = days.map(d => d.level);
       }
     } catch (contribError: any) {
-      console.warn('Failed to parse contributions:', contribError.message);
+      console.warn('[GitHub Contributions] Failed to parse contribution calendar:', contribError.message);
     }
 
+    console.log(`[GitHub API] ✅ Live data fetched — ${userData.public_repos} repos, ${totalContributions} contributions`);
     res.json({
+      fallback: false,
+      fetchedAt: new Date().toISOString(),
       profile: {
         avatar_url: userData.avatar_url,
         bio: userData.bio || 'Software Engineer | Full Stack Developer | Java & Cloud Specialist',
@@ -568,22 +598,16 @@ app.get('/api/github', async (req, res) => {
       }
     });
   } catch (error: any) {
-    console.error('Failed to fetch from GitHub API:', error.message);
-    // Graceful fallback values (exact 422 contributions matching GitHub profile)
+    console.error('[GitHub API] ❌ All retries exhausted, serving fallback:', error.message);
     const fallbackCalendar = Array.from({ length: 365 }, (_, i) => {
-      if (i < 200) {
-        return i === 115 ? 2 : 0;
-      } else if (i < 260) {
-        return (i % 3 === 0) ? 1 : (i % 7 === 0 ? 2 : 0);
-      } else if (i < 310) {
-        return (i % 2 === 0) ? 2 : (i % 5 === 0 ? 3 : 1);
-      } else {
-        return (i % 4 === 0) ? 4 : (i % 2 === 0 ? 3 : 2);
-      }
+      if (i < 200) return i === 115 ? 2 : 0;
+      else if (i < 260) return (i % 3 === 0) ? 1 : (i % 7 === 0 ? 2 : 0);
+      else if (i < 310) return (i % 2 === 0) ? 2 : (i % 5 === 0 ? 3 : 1);
+      else return (i % 4 === 0) ? 4 : (i % 2 === 0 ? 3 : 2);
     });
-
     res.json({
       fallback: true,
+      fetchedAt: new Date().toISOString(),
       profile: {
         avatar_url: 'https://github.com/Rohitkohli28.png',
         bio: 'B.Tech CSE student at DIT University building scalable full-stack applications, AI software, and data engineering solutions.',
@@ -594,82 +618,131 @@ app.get('/api/github', async (req, res) => {
         html_url: 'https://github.com/Rohitkohli28'
       },
       repos: [
-        {
-          id: 1,
-          name: 'rohit-kumar-kohli-portfolio',
-          description: 'Full-stack React 19 portfolio & AI assistant powered by Google Gemini 3.5 Flash & Express.',
-          stargazers_count: 1,
-          forks_count: 0,
-          language: 'TypeScript',
-          html_url: 'https://github.com/Rohitkohli28/rohit-kumar-kohli-portfolio'
-        },
-        {
-          id: 2,
-          name: 'doctor-appointment-system',
-          description: 'A React-Node healthcare booking panel integrated with Socket.IO channels and Gemini symptoms helper.',
-          stargazers_count: 8,
-          forks_count: 2,
-          language: 'TypeScript',
-          html_url: 'https://github.com/Rohitkohli28/doctor-appointment-system'
-        },
-        {
-          id: 3,
-          name: 'real-time-chat-app',
-          description: 'Real-time WebSocket chat app integrated with Web Speech API voice controls.',
-          stargazers_count: 5,
-          forks_count: 1,
-          language: 'JavaScript',
-          html_url: 'https://github.com/Rohitkohli28/real-time-chat-app'
-        }
+        { id: 1, name: 'rohit-kumar-kohli-portfolio', description: 'Full-stack React 19 portfolio & AI assistant powered by Google Gemini 3.5 Flash & Express.', stargazers_count: 1, forks_count: 0, language: 'TypeScript', html_url: 'https://github.com/Rohitkohli28/rohit-kumar-kohli-portfolio' },
+        { id: 2, name: 'doctor-appointment-system', description: 'A React-Node healthcare booking panel integrated with Socket.IO channels and Gemini symptoms helper.', stargazers_count: 8, forks_count: 2, language: 'TypeScript', html_url: 'https://github.com/Rohitkohli28/doctor-appointment-system' },
+        { id: 3, name: 'real-time-chat-app', description: 'Real-time WebSocket chat app integrated with Web Speech API voice controls.', stargazers_count: 5, forks_count: 1, language: 'JavaScript', html_url: 'https://github.com/Rohitkohli28/real-time-chat-app' }
       ],
-      contributions: {
-        total: 422,
-        streak: 15,
-        calendar: fallbackCalendar
-      }
+      contributions: { total: 422, streak: 15, calendar: fallbackCalendar }
     });
   }
 });
 
-// 4. LeetCode Proxy Endpoint (GraphQL with Dynamic Submission Calendar & Caching)
+// 4. LeetCode Proxy Endpoint
+// Strategy: leetcode-stats-api.herokuapp.com (no cookie needed) → GraphQL fallback → hardcoded fallback
 app.get('/api/leetcode', async (req, res) => {
+  // Prevent Vercel edge / CDN from caching this API response
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  // Helper to build a readable date label from a Unix timestamp (seconds)
+  function relativeTime(timestampSec: number): string {
+    const secondsAgo = Math.floor(Date.now() / 1000) - timestampSec;
+    if (secondsAgo < 60) return 'Just now';
+    if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
+    if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
+    if (secondsAgo < 86400 * 30) return `${Math.floor(secondsAgo / 86400)}d ago`;
+    return new Date(timestampSec * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Source 1: leetcode-stats-api.herokuapp.com (public, no auth needed)
+  // ─────────────────────────────────────────────────────────────────
+  try {
+    const statsRes = await fetch('https://leetcode-stats-api.herokuapp.com/Rohit2028', {
+      headers: { 'User-Agent': 'rohit-portfolio-agent', 'Accept': 'application/json' }
+    });
+
+    if (!statsRes.ok) throw new Error(`leetcode-stats-api returned ${statsRes.status}`);
+    const stats = await statsRes.json();
+    if (stats.status === 'error') throw new Error(`leetcode-stats-api error: ${stats.message}`);
+
+    // Also try to get recent submissions via the alfa-leetcode-api (lightweight, public)
+    let recentSubmissions: any[] = [];
+    try {
+      const recentRes = await fetch('https://alfa-leetcode-api.0x10.tech/Rohit2028/submission?limit=10', {
+        headers: { 'User-Agent': 'rohit-portfolio-agent', 'Accept': 'application/json' }
+      });
+      if (recentRes.ok) {
+        const recentJson = await recentRes.json();
+        const rawList: any[] = recentJson.submission || recentJson.recentSubmissionList || [];
+        recentSubmissions = rawList.slice(0, 10).map((sub: any) => {
+          const ts = parseInt(sub.timestamp || sub.time || '0', 10);
+          let difficulty = 'Medium';
+          const titleLower = (sub.title || '').toLowerCase();
+          if (titleLower.includes('easy') || titleLower.includes('two sum') || titleLower.includes('palindrome') || titleLower.includes('reverse') || titleLower.includes('merge')) difficulty = 'Easy';
+          else if (titleLower.includes('hard') || titleLower.includes('median') || titleLower.includes('serialize') || titleLower.includes('edit distance') || titleLower.includes('lru')) difficulty = 'Hard';
+          return {
+            title: sub.title || sub.titleSlug || 'Unknown Problem',
+            difficulty: sub.difficulty || difficulty,
+            status: (sub.statusDisplay || sub.status || 'Accepted') === 'Accepted' ? 'Accepted' : (sub.statusDisplay || sub.status || 'Submitted'),
+            date: ts > 0 ? relativeTime(ts) : 'Recently'
+          };
+        });
+      }
+    } catch (recentErr: any) {
+      console.warn('[LeetCode Recent] Could not fetch recent submissions:', recentErr.message);
+    }
+
+    // Build a synthetic submission calendar (stats API doesn't provide full calendar)
+    const submissionCalendar: Record<string, number> = {};
+    if (stats.submissionCalendar) {
+      try {
+        const parsedCal = typeof stats.submissionCalendar === 'string'
+          ? JSON.parse(stats.submissionCalendar)
+          : stats.submissionCalendar;
+        for (const [tsSec, count] of Object.entries(parsedCal)) {
+          const d = new Date(parseInt(tsSec, 10) * 1000);
+          const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          submissionCalendar[dateStr] = (submissionCalendar[dateStr] || 0) + (count as number);
+        }
+      } catch (_) { /* ignore parse errors */ }
+    }
+
+    console.log(`[LeetCode API] ✅ Live data via leetcode-stats-api — solved: ${stats.totalSolved}`);
+    res.json({
+      fallback: false,
+      fetchedAt: new Date().toISOString(),
+      totalQuestions: stats.totalQuestions || 3500,
+      totalSolved: stats.totalSolved || 0,
+      easySolved: stats.easySolved || 0,
+      mediumSolved: stats.mediumSolved || 0,
+      hardSolved: stats.hardSolved || 0,
+      ranking: stats.ranking || 0,
+      userAvatar: stats.userAvatar || 'https://assets.leetcode.com/users/default_avatar.png',
+      streak: stats.streak || 0,
+      totalActiveDays: stats.totalActiveDays || 0,
+      recentSubmissions,
+      submissionCalendar
+    });
+    return;
+  } catch (primaryErr: any) {
+    console.warn('[LeetCode API] Primary source (leetcode-stats-api) failed:', primaryErr.message, '— trying GraphQL fallback...');
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Source 2: LeetCode official GraphQL (may be blocked, but try)
+  // ─────────────────────────────────────────────────────────────────
   try {
     const response = await fetch('https://leetcode.com/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://leetcode.com',
+        'Origin': 'https://leetcode.com'
       },
       body: JSON.stringify({
         query: `
           query leetcodeStats($username: String!) {
-            allQuestionsCount {
-              difficulty
-              count
-            }
+            allQuestionsCount { difficulty count }
             matchedUser(username: $username) {
-              submitStatsGlobal {
-                acSubmissionNum {
-                  difficulty
-                  count
-                }
-              }
-              profile {
-                ranking
-                userAvatar
-              }
-              userCalendar {
-                activeYears
-                streak
-                totalActiveDays
-                submissionCalendar
-              }
+              submitStatsGlobal { acSubmissionNum { difficulty count } }
+              profile { ranking userAvatar }
+              userCalendar { streak totalActiveDays submissionCalendar }
             }
             recentSubmissionList(username: $username, limit: 10) {
-              title
-              timestamp
-              statusDisplay
-              lang
+              title timestamp statusDisplay lang
             }
           }
         `,
@@ -677,130 +750,88 @@ app.get('/api/leetcode', async (req, res) => {
       })
     });
 
-    if (!response.ok) {
-      throw new Error(`LeetCode GraphQL query returned status ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(`LeetCode GraphQL returned ${response.status}`);
     const json = await response.json();
     const data = json.data;
+    if (!data || !data.matchedUser) throw new Error('LeetCode user data missing in GraphQL response');
 
-    if (!data || !data.matchedUser) {
-      throw new Error('LeetCode user data missing in GraphQL response');
-    }
+    const acSubmissions = data.matchedUser?.submitStatsGlobal?.acSubmissionNum || [];
+    const totalQuestions = (data.allQuestionsCount || []).reduce((acc: number, i: any) => acc + i.count, 0) || 3500;
+    const totalSolved = acSubmissions.find((i: any) => i.difficulty === 'All')?.count || 0;
+    const easySolved = acSubmissions.find((i: any) => i.difficulty === 'Easy')?.count || 0;
+    const mediumSolved = acSubmissions.find((i: any) => i.difficulty === 'Medium')?.count || 0;
+    const hardSolved = acSubmissions.find((i: any) => i.difficulty === 'Hard')?.count || 0;
+    const ranking = data.matchedUser?.profile?.ranking || 0;
+    const userAvatar = data.matchedUser?.profile?.userAvatar || '';
+    const streak = data.matchedUser?.userCalendar?.streak || 0;
+    const totalActiveDays = data.matchedUser?.userCalendar?.totalActiveDays || 0;
+    const submissionCalendarStr = data.matchedUser?.userCalendar?.submissionCalendar || '{}';
 
-    const allQuestions = data.allQuestionsCount;
-    const matchedUser = data.matchedUser;
-    const acSubmissions = matchedUser?.submitStatsGlobal?.acSubmissionNum;
-
-    const totalQuestions = allQuestions?.reduce((acc: number, item: any) => acc + item.count, 0) || 3100;
-    const totalSolved = acSubmissions?.find((item: any) => item.difficulty === 'All')?.count || 352;
-    const easySolved = acSubmissions?.find((item: any) => item.difficulty === 'Easy')?.count || 182;
-    const mediumSolved = acSubmissions?.find((item: any) => item.difficulty === 'Medium')?.count || 140;
-    const hardSolved = acSubmissions?.find((item: any) => item.difficulty === 'Hard')?.count || 30;
-
-    const ranking = matchedUser?.profile?.ranking || 184512;
-    const userAvatar = matchedUser?.profile?.userAvatar || '';
-    const streak = matchedUser?.userCalendar?.streak || 0;
-    const totalActiveDays = matchedUser?.userCalendar?.totalActiveDays || 0;
-    const submissionCalendarStr = matchedUser?.userCalendar?.submissionCalendar || '{}';
-
-    // Parse submissionCalendar into date string keys (YYYY-MM-DD -> count)
     const submissionCalendar: Record<string, number> = {};
-    if (submissionCalendarStr) {
-      try {
-        const parsedCal = JSON.parse(submissionCalendarStr);
-        for (const [timestampSec, count] of Object.entries(parsedCal)) {
-          const d = new Date(parseInt(timestampSec, 10) * 1000);
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, '0');
-          const dayVal = String(d.getDate()).padStart(2, '0');
-          const dateStr = `${y}-${m}-${dayVal}`;
-          submissionCalendar[dateStr] = (submissionCalendar[dateStr] || 0) + (count as number);
-        }
-      } catch (err) {
-        console.warn('Failed to parse LeetCode submissionCalendar JSON:', err);
+    try {
+      const parsedCal = JSON.parse(submissionCalendarStr);
+      for (const [tsSec, count] of Object.entries(parsedCal)) {
+        const d = new Date(parseInt(tsSec, 10) * 1000);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        submissionCalendar[dateStr] = (submissionCalendar[dateStr] || 0) + (count as number);
       }
-    }
+    } catch (_) { /* ignore */ }
 
-    // Parse recent submission list
-    const recentSubmissionsRaw = data.recentSubmissionList || [];
-    const recentSubmissions = recentSubmissionsRaw.map((sub: any) => {
-      const secondsAgo = Math.floor(Date.now() / 1000) - parseInt(sub.timestamp, 10);
-      let dateStr = 'Recently';
-      if (secondsAgo < 60) dateStr = 'Just now';
-      else if (secondsAgo < 3600) dateStr = `${Math.floor(secondsAgo / 60)}m ago`;
-      else if (secondsAgo < 86400) dateStr = `${Math.floor(secondsAgo / 3600)}h ago`;
-      else if (secondsAgo < 86400 * 30) dateStr = `${Math.floor(secondsAgo / 86400)}d ago`;
-      else dateStr = new Date(parseInt(sub.timestamp, 10) * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' });
-
-      // Deterministically assign difficulty based on title if we don't have it natively
+    const recentSubmissions = (data.recentSubmissionList || []).map((sub: any) => {
+      const ts = parseInt(sub.timestamp, 10);
       let difficulty = 'Medium';
-      const titleLower = sub.title.toLowerCase();
-      if (titleLower.includes('sum') || titleLower.includes('easy') || titleLower.includes('palindrome') || titleLower.includes('reverse') || titleLower.includes('remove') || titleLower.includes('merge') || titleLower.includes('linked list')) {
-        difficulty = 'Easy';
-      } else if (titleLower.includes('hard') || titleLower.includes('median') || titleLower.includes('k sorted') || titleLower.includes('serialize') || titleLower.includes('maximum') || titleLower.includes('lru') || titleLower.includes('edit distance')) {
-        difficulty = 'Hard';
-      }
-
-      return {
-        title: sub.title,
-        difficulty,
-        status: sub.statusDisplay === 'Accepted' ? 'Accepted' : sub.statusDisplay,
-        date: dateStr
-      };
+      const t = sub.title.toLowerCase();
+      if (t.includes('sum') || t.includes('palindrome') || t.includes('reverse') || t.includes('merge') || t.includes('linked list')) difficulty = 'Easy';
+      else if (t.includes('median') || t.includes('serialize') || t.includes('edit distance') || t.includes('lru')) difficulty = 'Hard';
+      return { title: sub.title, difficulty, status: sub.statusDisplay === 'Accepted' ? 'Accepted' : sub.statusDisplay, date: relativeTime(ts) };
     });
 
+    console.log(`[LeetCode API] ✅ Live data via GraphQL — solved: ${totalSolved}`);
     res.json({
-      totalQuestions,
-      totalSolved,
-      easySolved,
-      mediumSolved,
-      hardSolved,
-      ranking,
-      userAvatar,
-      streak,
-      totalActiveDays,
-      recentSubmissions,
-      submissionCalendar
+      fallback: false,
+      fetchedAt: new Date().toISOString(),
+      totalQuestions, totalSolved, easySolved, mediumSolved, hardSolved,
+      ranking, userAvatar, streak, totalActiveDays, recentSubmissions, submissionCalendar
     });
-  } catch (error: any) {
-    console.warn('Failed to query LeetCode GraphQL API, using elegant portfolio fallback:', error.message);
-    
-    // Create a beautiful fallback calendar over the past 12 months with realistic activity
-    const fallbackCalendar: Record<string, number> = {};
-    const today = new Date();
-    for (let i = 0; i < 365; i++) {
-      if (i % 7 === 0 || i % 13 === 0 || i % 19 === 0) {
-        const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dayVal = String(d.getDate()).padStart(2, '0');
-        const dateStr = `${y}-${m}-${dayVal}`;
-        fallbackCalendar[dateStr] = i % 7 === 0 ? 2 : (i % 13 === 0 ? 1 : 4);
-      }
-    }
-
-    res.json({
-      fallback: true,
-      totalQuestions: 3180,
-      totalSolved: 360,
-      easySolved: 185,
-      mediumSolved: 160,
-      hardSolved: 15,
-      ranking: 363253,
-      userAvatar: 'https://assets.leetcode.com/users/default_avatar.png',
-      streak: 136,
-      totalActiveDays: 162,
-      recentSubmissions: [
-        { title: 'Interval List Intersections', difficulty: 'Medium', status: 'Accepted', date: '22h ago', url: 'https://leetcode.com/problems/interval-list-intersections/' },
-        { title: 'Network Recovery Pathways', difficulty: 'Medium', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/network-recovery-pathways/' },
-        { title: 'Number of Paths with Max Score', difficulty: 'Hard', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/number-of-paths-with-max-score/' },
-        { title: 'Rank Scores', difficulty: 'Medium', status: 'Accepted', date: '1d ago', url: 'https://leetcode.com/problems/rank-scores/' },
-        { title: 'Two Sum', difficulty: 'Easy', status: 'Accepted', date: '2d ago', url: 'https://leetcode.com/problems/two-sum/' }
-      ],
-      submissionCalendar: fallbackCalendar
-    });
+    return;
+  } catch (graphqlErr: any) {
+    console.warn('[LeetCode API] GraphQL fallback also failed:', graphqlErr.message, '— serving hardcoded fallback');
   }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Source 3: Hardcoded fallback (last resort)
+  // ─────────────────────────────────────────────────────────────────
+  const fallbackCalendar: Record<string, number> = {};
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    if (i % 7 === 0 || i % 13 === 0 || i % 19 === 0) {
+      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      fallbackCalendar[dateStr] = i % 7 === 0 ? 2 : (i % 13 === 0 ? 1 : 4);
+    }
+  }
+  console.error('[LeetCode API] ❌ All sources failed — serving last-resort hardcoded fallback');
+  res.json({
+    fallback: true,
+    fetchedAt: new Date().toISOString(),
+    totalQuestions: 3500,
+    totalSolved: 360,
+    easySolved: 185,
+    mediumSolved: 160,
+    hardSolved: 15,
+    ranking: 363253,
+    userAvatar: 'https://assets.leetcode.com/users/default_avatar.png',
+    streak: 136,
+    totalActiveDays: 162,
+    recentSubmissions: [
+      { title: 'Interval List Intersections', difficulty: 'Medium', status: 'Accepted', date: '22h ago' },
+      { title: 'Network Recovery Pathways', difficulty: 'Medium', status: 'Accepted', date: '1d ago' },
+      { title: 'Number of Paths with Max Score', difficulty: 'Hard', status: 'Accepted', date: '1d ago' },
+      { title: 'Rank Scores', difficulty: 'Medium', status: 'Accepted', date: '1d ago' },
+      { title: 'Two Sum', difficulty: 'Easy', status: 'Accepted', date: '2d ago' }
+    ],
+    submissionCalendar: fallbackCalendar
+  });
 });
 
 // 5. Server-Side AI Symptom Analyzer (Doctor Appointment System Simulation)

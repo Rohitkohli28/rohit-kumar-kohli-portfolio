@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { GitBranch, Star, Code, ArrowUpRight, Github, Sparkles } from 'lucide-react';
+import { GitBranch, Star, Code, ArrowUpRight, Github, CheckCircle2, WifiOff } from 'lucide-react';
 
 interface GitHubData {
   profile: {
@@ -33,37 +33,78 @@ interface GitHubData {
 }
 
 const CACHE_KEY_GH = 'portfolio_github_cache';
-const CACHE_TTL = 3600 * 1000; // 1 hour
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes — refresh frequently for live data
+
+/** Returns a human-readable "X min ago" label from a Date */
+function syncLabel(date: Date | null): string {
+  if (!date) return '';
+  const diffMs = Date.now() - date.getTime();
+  if (diffMs < 60_000) return 'just now';
+  if (diffMs < 3_600_000) return `${Math.floor(diffMs / 60_000)} min ago`;
+  return `${Math.floor(diffMs / 3_600_000)}h ago`;
+}
 
 export default function GithubActivity() {
   const [ghData, setGhData] = useState<GitHubData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [syncTime, setSyncTime] = useState<Date | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
-      setErrorStatus(null);
+      setIsOffline(false);
 
+      // ── Step 1: Check fresh localStorage cache (< 5 min old AND was live data) ──
       try {
-        let finalGh: GitHubData;
-        const cachedGh = localStorage.getItem(CACHE_KEY_GH);
-        if (cachedGh) {
-          const { data, timestamp } = JSON.parse(cachedGh);
-          if (Date.now() - timestamp < CACHE_TTL && data && data.contributions && data.contributions.total >= 422) {
-            finalGh = data;
-          } else {
-            finalGh = await fetch('/api/github').then(r => r.json());
-            localStorage.setItem(CACHE_KEY_GH, JSON.stringify({ data: finalGh, timestamp: Date.now() }));
+        const cachedRaw = localStorage.getItem(CACHE_KEY_GH);
+        if (cachedRaw) {
+          const { data, timestamp, wasFallback } = JSON.parse(cachedRaw);
+          const age = Date.now() - timestamp;
+          if (age < CACHE_TTL && data && !wasFallback) {
+            setGhData(data);
+            setSyncTime(new Date(timestamp));
+            setIsLoading(false);
+            return;
           }
-        } else {
-          finalGh = await fetch('/api/github').then(r => r.json());
-          localStorage.setItem(CACHE_KEY_GH, JSON.stringify({ data: finalGh, timestamp: Date.now() }));
         }
-        setGhData(finalGh);
+      } catch (_) { /* corrupt cache — ignore and re-fetch */ }
+
+      // ── Step 2: Fetch fresh data from server-side proxy ──
+      try {
+        const response = await fetch('/api/github', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`GitHub API proxy returned ${response.status}`);
+        const json = await response.json();
+
+        const isFallback = json.fallback === true;
+        setIsOffline(isFallback);
+
+        const freshData: GitHubData = {
+          profile: json.profile,
+          repos: json.repos,
+          contributions: json.contributions,
+        };
+        setGhData(freshData);
+        setSyncTime(new Date());
+
+        // Cache result; mark wasFallback so next visit re-fetches if stale
+        localStorage.setItem(CACHE_KEY_GH, JSON.stringify({
+          data: freshData,
+          timestamp: Date.now(),
+          wasFallback: isFallback
+        }));
       } catch (err: any) {
-        console.error('Failed to resolve live GitHub API:', err.message);
-        setErrorStatus('Displaying cached profile logs (API offline mode).');
+        console.error('[GitHub] Network/proxy error:', err.message);
+        // ── Step 3: Use any available cached data as last resort ──
+        try {
+          const cachedRaw = localStorage.getItem(CACHE_KEY_GH);
+          if (cachedRaw) {
+            const { data } = JSON.parse(cachedRaw);
+            if (data) setGhData(data);
+          }
+        } catch (_) {}
+        setIsOffline(true);
+        setSyncTime(null);
       } finally {
         setIsLoading(false);
       }
@@ -114,11 +155,7 @@ export default function GithubActivity() {
 
     const list = Object.entries(counts).map(([name, count]) => {
       const percentage = Math.round((count / total) * 100);
-      return {
-        name,
-        percentage,
-        color: colors[name] || '#8b5cf6'
-      };
+      return { name, percentage, color: colors[name] || '#8b5cf6' };
     });
 
     list.sort((a, b) => b.percentage - a.percentage);
@@ -129,15 +166,10 @@ export default function GithubActivity() {
 
   // Calendar squares: 364 days matching exact GitHub contribution graph distribution
   const fallbackCalendar = Array.from({ length: 364 }, (_, i) => {
-    if (i < 200) {
-      return i === 115 ? 2 : 0;
-    } else if (i < 260) {
-      return (i % 3 === 0) ? 1 : (i % 7 === 0 ? 2 : 0);
-    } else if (i < 310) {
-      return (i % 2 === 0) ? 2 : (i % 5 === 0 ? 3 : 1);
-    } else {
-      return (i % 4 === 0) ? 4 : (i % 2 === 0 ? 3 : 2);
-    }
+    if (i < 200) return i === 115 ? 2 : 0;
+    else if (i < 260) return (i % 3 === 0) ? 1 : (i % 7 === 0 ? 2 : 0);
+    else if (i < 310) return (i % 2 === 0) ? 2 : (i % 5 === 0 ? 3 : 1);
+    else return (i % 4 === 0) ? 4 : (i % 2 === 0 ? 3 : 2);
   });
 
   const heatmapSquares = (ghData?.contributions?.calendar && ghData.contributions.calendar.length > 0)
@@ -165,7 +197,7 @@ export default function GithubActivity() {
         {/* Section Header */}
         <div className="text-center max-w-xl mx-auto mb-16">
           <div className="text-accent font-mono text-xs tracking-[0.25em] uppercase mb-4">
-            // LIVE REPOSITORIES & COMMITS
+            // LIVE REPOSITORIES &amp; COMMITS
           </div>
           <h2 className="font-display font-black text-3xl md:text-5xl text-text mb-4">
             GitHub Activity
@@ -173,11 +205,22 @@ export default function GithubActivity() {
           <p className="text-sm text-muted">
             Tracking contributions, language proficiency, and key repository indexes.
           </p>
-          {errorStatus && (
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/8 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase">
-              <Sparkles className="animate-spin" size={12} /> {errorStatus}
-            </div>
-          )}
+
+          {/* Live / Offline status badge */}
+          <div className="mt-4 flex justify-center">
+            {isOffline ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-amber-500/8 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase">
+                <WifiOff size={11} />
+                Offline — using last synced data
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-mono text-[10px] uppercase">
+                <CheckCircle2 size={11} />
+                Live
+                {syncTime && <span className="text-emerald-500/70">• Last synced {syncLabel(syncTime)}</span>}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Outer full-width container for GitHub Activity dashboard */}
@@ -241,9 +284,9 @@ export default function GithubActivity() {
 
               <div className="flex justify-between items-center text-xs text-muted font-mono">
                 <span>Verification ID: RKK-SEC-09</span>
-                <span className="flex items-center gap-1 text-emerald-400">
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
-                  API SYNCHRONIZED
+                <span className={`flex items-center gap-1 ${isOffline ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isOffline ? 'bg-amber-400' : 'bg-emerald-400 animate-ping'}`} />
+                  {isOffline ? 'CACHED DATA' : 'API SYNCHRONIZED'}
                 </span>
               </div>
 
