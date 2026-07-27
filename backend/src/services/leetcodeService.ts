@@ -4,6 +4,79 @@ import { logger } from '../utils/logger.js';
 
 const CACHE_TTL_MS = 1 * 60 * 60 * 1000; // 1 Hour TTL for fresh LeetCode stats
 
+// --- TypeScript Interfaces for External API Responses ---
+
+interface AlfaSubmission {
+  title?: string;
+  titleSlug?: string;
+  timestamp?: string;
+  time?: string;
+  difficulty?: string;
+  statusDisplay?: string;
+}
+
+interface AlfaSubmissionsResponse {
+  submission?: AlfaSubmission[];
+  recentSubmissionList?: AlfaSubmission[];
+  acSubmissionList?: AlfaSubmission[];
+}
+
+interface LeetCodeStatsApiResponse {
+  status?: string;
+  message?: string;
+  totalQuestions?: number;
+  totalSolved?: number;
+  easySolved?: number;
+  mediumSolved?: number;
+  hardSolved?: number;
+  ranking?: number;
+  userAvatar?: string;
+  streak?: number;
+  totalActiveDays?: number;
+  submissionCalendar?: Record<string, number> | string;
+}
+
+interface LeetCodeGraphQLQuestionCount {
+  difficulty?: string;
+  count?: number;
+}
+
+interface LeetCodeGraphQLSubmissionNum {
+  difficulty?: string;
+  count?: number;
+}
+
+interface LeetCodeGraphQLRecentSubmission {
+  title?: string;
+  titleSlug?: string;
+  timestamp?: string;
+  statusDisplay?: string;
+}
+
+interface LeetCodeGraphQLMatchedUser {
+  submitStatsGlobal?: {
+    acSubmissionNum?: LeetCodeGraphQLSubmissionNum[];
+  };
+  profile?: {
+    ranking?: number;
+    userAvatar?: string;
+  };
+  userCalendar?: {
+    streak?: number;
+    totalActiveDays?: number;
+    submissionCalendar?: string | Record<string, number>;
+  };
+}
+
+export interface LeetCodeGraphQLResponse {
+  data?: {
+    allQuestionsCount?: LeetCodeGraphQLQuestionCount[];
+    matchedUser?: LeetCodeGraphQLMatchedUser | null;
+    recentSubmissionList?: LeetCodeGraphQLRecentSubmission[];
+  };
+  errors?: any;
+}
+
 function relativeTime(timestampSec: number): string {
   if (!timestampSec) return 'Recently';
   const secondsAgo = Math.floor(Date.now() / 1000) - timestampSec;
@@ -21,10 +94,10 @@ async function fetchRecentSubmissions(username: string): Promise<any[]> {
       headers: { 'User-Agent': 'rohit-portfolio-backend', 'Accept': 'application/json' }
     });
     if (res.ok) {
-      const json = await res.json();
+      const json = (await res.json()) as AlfaSubmissionsResponse;
       const list = json.submission || json.recentSubmissionList || json.acSubmissionList || [];
       if (Array.isArray(list) && list.length > 0) {
-        return list.slice(0, 10).map((sub: any) => {
+        return list.slice(0, 10).map((sub: AlfaSubmission) => {
           const ts = parseInt(sub.timestamp || sub.time || '0', 10);
           let difficulty = sub.difficulty || 'Medium';
           const title = sub.title || sub.titleSlug || 'Problem';
@@ -75,7 +148,7 @@ export async function getLeetCodeStatsService(): Promise<any> {
     });
 
     if (statsRes.ok) {
-      const stats = await statsRes.json();
+      const stats = (await statsRes.json()) as LeetCodeStatsApiResponse;
       if (stats.status !== 'error') {
         const payload = {
           fallback: false,
@@ -132,27 +205,27 @@ export async function getLeetCodeStatsService(): Promise<any> {
     });
 
     if (response.ok) {
-      const json = await response.json();
+      const json = (await response.json()) as LeetCodeGraphQLResponse;
       const data = json.data;
       if (data && data.matchedUser) {
         const acSubmissions = data.matchedUser.submitStatsGlobal?.acSubmissionNum || [];
-        const totalSolved = acSubmissions.find((i: any) => i.difficulty === 'All')?.count || 360;
-        const easySolved = acSubmissions.find((i: any) => i.difficulty === 'Easy')?.count || 185;
-        const mediumSolved = acSubmissions.find((i: any) => i.difficulty === 'Medium')?.count || 160;
-        const hardSolved = acSubmissions.find((i: any) => i.difficulty === 'Hard')?.count || 15;
+        const totalSolved = acSubmissions.find((i) => i.difficulty === 'All')?.count || 360;
+        const easySolved = acSubmissions.find((i) => i.difficulty === 'Easy')?.count || 185;
+        const mediumSolved = acSubmissions.find((i) => i.difficulty === 'Medium')?.count || 160;
+        const hardSolved = acSubmissions.find((i) => i.difficulty === 'Hard')?.count || 15;
 
         if (liveRecent.length === 0 && data.recentSubmissionList && Array.isArray(data.recentSubmissionList)) {
-          liveRecent = data.recentSubmissionList.map((sub: any) => {
-            const ts = parseInt(sub.timestamp, 10);
+          liveRecent = data.recentSubmissionList.map((sub) => {
+            const ts = parseInt(sub.timestamp || '0', 10);
             let difficulty = 'Medium';
             const tLower = (sub.title || '').toLowerCase();
             if (tLower.includes('sum') || tLower.includes('palindrome') || tLower.includes('reverse') || tLower.includes('merge') || tLower.includes('linked list')) difficulty = 'Easy';
             else if (tLower.includes('median') || tLower.includes('serialize') || tLower.includes('edit distance') || tLower.includes('max score')) difficulty = 'Hard';
 
             return {
-              title: sub.title,
+              title: sub.title || 'Problem',
               difficulty,
-              status: sub.statusDisplay === 'Accepted' ? 'Accepted' : sub.statusDisplay,
+              status: sub.statusDisplay === 'Accepted' ? 'Accepted' : (sub.statusDisplay || 'Accepted'),
               date: ts > 0 ? relativeTime(ts) : 'Recently'
             };
           });
@@ -161,7 +234,7 @@ export async function getLeetCodeStatsService(): Promise<any> {
         const payload = {
           fallback: false,
           fetchedAt: new Date().toISOString(),
-          totalQuestions: (data.allQuestionsCount || []).reduce((acc: number, i: any) => acc + i.count, 0) || 3500,
+          totalQuestions: (data.allQuestionsCount || []).reduce((acc: number, i) => acc + (i.count || 0), 0) || 3500,
           totalSolved, easySolved, mediumSolved, hardSolved,
           ranking: data.matchedUser.profile?.ranking || 363253,
           userAvatar: data.matchedUser.profile?.userAvatar || 'https://assets.leetcode.com/users/default_avatar.png',

@@ -4,6 +4,26 @@ import { logger } from '../utils/logger.js';
 
 const CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 Hours TTL
 
+interface GitHubUserResponse {
+  avatar_url?: string;
+  bio?: string | null;
+  followers?: number;
+  following?: number;
+  public_repos?: number;
+  name?: string | null;
+  html_url?: string;
+}
+
+interface GitHubRepoItem {
+  id: number;
+  name: string;
+  description: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  language: string | null;
+  html_url: string;
+}
+
 export async function getGitHubStatsService(): Promise<any> {
   // 1. Check MongoDB Cache
   try {
@@ -42,8 +62,8 @@ export async function getGitHubStatsService(): Promise<any> {
     if (!userRes.ok) throw new Error(`GitHub user endpoint returned ${userRes.status}`);
     if (!reposRes.ok) throw new Error(`GitHub repos endpoint returned ${reposRes.status}`);
 
-    const userData = await userRes.json();
-    const reposData = await reposRes.json();
+    const userData = (await userRes.json()) as GitHubUserResponse;
+    const reposData = (await reposRes.json()) as GitHubRepoItem[];
 
     // Parse contributions
     let contributionsList: number[] = [];
@@ -91,7 +111,7 @@ export async function getGitHubStatsService(): Promise<any> {
         name: userData.name || 'Rohit Kumar Kohli',
         html_url: userData.html_url
       },
-      repos: reposData.map((repo: any) => ({
+      repos: (reposData || []).map((repo: GitHubRepoItem) => ({
         id: repo.id,
         name: repo.name,
         description: repo.description,
