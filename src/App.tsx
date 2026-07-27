@@ -19,6 +19,7 @@ import Achievements from './components/sections/Achievements';
 import Contact from './components/sections/Contact';
 import Footer from './components/layout/Footer';
 import TerminalModal from './components/sections/TerminalModal';
+import ResumeModal from './components/ResumeModal';
 
 // Lazy-load AI Chatbot for zero initial bundle size impact
 const ChatWindow = React.lazy(() => import('./components/AIChat/ChatWindow'));
@@ -27,6 +28,14 @@ export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
+
+  // Global event listener for opening resume preview modal
+  useEffect(() => {
+    const handleOpenResume = () => setIsResumeModalOpen(true);
+    window.addEventListener('open-resume-modal', handleOpenResume);
+    return () => window.removeEventListener('open-resume-modal', handleOpenResume);
+  }, []);
 
   // Scroll Progress tracker
   useEffect(() => {
@@ -161,7 +170,10 @@ export default function App() {
           {/* 7. Konami CLI Terminal modal */}
           <TerminalModal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
 
-          {/* 8. Floating AI Portfolio Assistant Chatbot (Lazy-Loaded) */}
+          {/* 8. Resume PDF Preview & Download Modal */}
+          <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} />
+
+          {/* 9. Floating AI Portfolio Assistant Chatbot (Lazy-Loaded) */}
           <React.Suspense fallback={null}>
             <ChatWindow />
           </React.Suspense>

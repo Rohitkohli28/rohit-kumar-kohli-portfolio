@@ -85,20 +85,6 @@ export const EXPERIENCES: Experience[] = [
       'Participated in daily standups, code reviews, and Agile sprint planning cycles.'
     ],
     tech: ['React', 'Node.js', 'MongoDB', 'Express', 'JWT', 'REST APIs']
-  },
-  {
-    company: 'Microsoft Azure',
-    role: 'Cloud Virtual Job Simulation',
-    type: 'simulation',
-    startDate: 'November 2023',
-    endDate: 'November 2023',
-    location: 'Azure (Remote)',
-    bullets: [
-      'Architected a highly resilient serverless solution using Azure Functions, Blob Storage, and CosmosDB.',
-      'Implemented auto-scaling policies on Azure App Services, reducing simulated infrastructure costs by 15%.',
-      'Deployed fully containerized applications using Azure Kubernetes Service (AKS) and monitored resource health metrics.'
-    ],
-    tech: ['Microsoft Azure', 'Functions', 'Blob Storage', 'CosmosDB', 'AKS', 'ARM Templates']
   }
 ];
 

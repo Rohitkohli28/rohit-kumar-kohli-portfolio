@@ -25,6 +25,7 @@ import { Project } from '../../types';
 import { PROJECTS } from '../../data';
 import SystemDesignView from './SystemDesignView';
 import ChatSimulator from './ChatSimulator';
+import { API_BASE_URL } from '../../services/api';
 
 interface ProjectModalProps {
   project: Project | null;
@@ -95,7 +96,7 @@ export default function ProjectModal({ project, onClose, onSelectProject }: Proj
     setSymptomResult(null);
 
     try {
-      const res = await fetch('/api/gemini/symptom-analyze', {
+      const res = await fetch(`${API_BASE_URL}/api/gemini/symptom-analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -123,7 +124,7 @@ export default function ProjectModal({ project, onClose, onSelectProject }: Proj
     setResumeResult(null);
 
     try {
-      const res = await fetch('/api/gemini/resume-analyze', {
+      const res = await fetch(`${API_BASE_URL}/api/gemini/resume-analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

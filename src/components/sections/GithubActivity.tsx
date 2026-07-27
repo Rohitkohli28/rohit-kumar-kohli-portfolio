@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { GitBranch, Star, Code, ArrowUpRight, Github, CheckCircle2, WifiOff } from 'lucide-react';
+import { API_BASE_URL } from '../../services/api';
 
 interface GitHubData {
   profile: {
@@ -72,7 +73,7 @@ export default function GithubActivity() {
 
       // ── Step 2: Fetch fresh data from server-side proxy ──
       try {
-        const response = await fetch('/api/github', { cache: 'no-store' });
+        const response = await fetch(`${API_BASE_URL}/api/github/stats`, { cache: 'no-store' });
         if (!response.ok) throw new Error(`GitHub API proxy returned ${response.status}`);
         const json = await response.json();
 

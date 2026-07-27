@@ -5,6 +5,7 @@
 
 import { retrieveRAGContext } from './rag';
 import { getKnowledge } from './knowledge';
+import { API_BASE_URL } from './api';
 
 export interface ChatMessagePayload {
   role: 'user' | 'assistant';
@@ -23,7 +24,7 @@ export async function sendChatMessage(
 ): Promise<ChatApiResponse> {
   // 1. Try Backend API endpoint
   try {
-    const res = await fetch('/api/chat', {
+    const res = await fetch(`${API_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, history })
@@ -82,7 +83,7 @@ export async function sendChatMessage(
   } else if (rag.cardType === 'skills') {
     reply = "Rohit is strongest in Java (90% proficiency) and highly skilled in React 19, TypeScript, Node.js, Express, MongoDB, Microsoft Azure, Docker, and Socket.IO. Here is his skill matrix:";
   } else if (rag.cardType === 'experience') {
-    reply = "Rohit has completed software engineering internships at Celebal Technologies (Data Engineering), SmartBridge (ServiceNow), SmartED Innovations (Full Stack MERN), and Microsoft Azure Cloud Simulation:";
+    reply = "Rohit has completed software engineering internships at Celebal Technologies (Data Engineering), SmartBridge (ServiceNow), and SmartED Innovations (Full Stack MERN):";
   } else if (rag.cardType === 'contact') {
     reply = `You can reach out to Rohit directly via email at **${k.owner.email}**, or connect on GitHub and LinkedIn:`;
   } else if (rag.cardType === 'certifications') {

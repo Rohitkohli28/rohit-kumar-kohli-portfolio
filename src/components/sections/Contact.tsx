@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, Github, Linkedin, AlertCircle } from 'lucide-react';
 import { useMagneticButton } from '../../hooks/useMagneticButton';
+import { API_BASE_URL } from '../../services/api';
 
 interface FormFields {
   name: string;
@@ -73,7 +74,7 @@ export default function Contact() {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fields)

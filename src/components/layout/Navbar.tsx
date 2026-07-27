@@ -127,14 +127,13 @@ export default function Navbar() {
             </button>
 
             {/* Magnetic Resume */}
-            <a
-              ref={resumeRef as React.RefObject<HTMLAnchorElement>}
-              href="/Rohit_Kumar_Kohli_Resume.pdf"
-              download="Rohit_Kumar_Kohli_Resume.pdf"
-              className="px-4 py-1.5 text-xs font-mono font-medium border border-primary text-primary hover:bg-primary hover:text-white rounded-lg transition-all"
+            <button
+              ref={resumeRef as React.RefObject<HTMLButtonElement>}
+              onClick={() => window.dispatchEvent(new CustomEvent('open-resume-modal'))}
+              className="px-4 py-1.5 text-xs font-mono font-medium border border-primary text-primary hover:bg-primary hover:text-white rounded-lg transition-all cursor-pointer"
             >
               RESUME.pdf
-            </a>
+            </button>
           </div>
 
           {/* Mobile Hamburguer Toggle */}
@@ -182,14 +181,15 @@ export default function Navbar() {
           <hr className="border-border my-2" />
 
           {/* Mobile Resume Link */}
-          <a
-            href="/Rohit_Kumar_Kohli_Resume.pdf"
-            download="Rohit_Kumar_Kohli_Resume.pdf"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="mx-auto w-full max-w-[200px] flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-primary to-secondary text-white font-mono text-xs font-semibold rounded-lg"
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              window.dispatchEvent(new CustomEvent('open-resume-modal'));
+            }}
+            className="mx-auto w-full max-w-[200px] flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-primary to-secondary text-white font-mono text-xs font-semibold rounded-lg cursor-pointer"
           >
-            <FileText size={14} /> DOWNLOAD RESUME
-          </a>
+            <FileText size={14} /> PREVIEW RESUME
+          </button>
         </div>
       </div>
     </>

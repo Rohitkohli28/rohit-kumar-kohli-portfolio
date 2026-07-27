@@ -116,18 +116,6 @@
         "Improved page load performance by 40% through lazy loading, code splitting, and memoization."
       ],
       "tech": ["React", "Node.js", "MongoDB", "Express", "JWT", "REST APIs"]
-    },
-    {
-      "company": "Microsoft Azure",
-      "role": "Cloud Virtual Job Simulation",
-      "duration": "November 2023",
-      "location": "Remote",
-      "bullets": [
-        "Architected a serverless solution using Azure Functions, Blob Storage, and CosmosDB.",
-        "Implemented auto-scaling policies on Azure App Services, reducing simulated costs by 15%.",
-        "Deployed containerized applications using Azure Kubernetes Service (AKS)."
-      ],
-      "tech": ["Microsoft Azure", "Functions", "Blob Storage", "CosmosDB", "AKS"]
     }
   ],
   "projects": [

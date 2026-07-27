@@ -737,14 +737,13 @@ export default function Hero() {
             >
               View Projects <ArrowRight size={14} />
             </button>
-            <a
-              ref={downloadResRef as React.RefObject<HTMLAnchorElement>}
-              href="/Rohit_Kumar_Kohli_Resume.pdf"
-              download="Rohit_Kumar_Kohli_Resume.pdf"
+            <button
+              ref={downloadResRef as React.RefObject<HTMLButtonElement>}
+              onClick={() => window.dispatchEvent(new CustomEvent('open-resume-modal'))}
               className="px-6 py-3 border border-border bg-card/40 hover:bg-card-hover text-text font-heading font-semibold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer"
             >
               Resume <Download size={14} />
-            </a>
+            </button>
           </motion.div>
 
           {/* Social Row */}

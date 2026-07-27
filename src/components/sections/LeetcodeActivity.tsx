@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { Award, CheckCircle2, ChevronRight, ExternalLink, Calendar, Flame, Target, WifiOff } from 'lucide-react';
 import { motion } from 'motion/react';
+import { API_BASE_URL } from '../../services/api';
 
 interface LeetCodeData {
   totalQuestions: number;
@@ -66,7 +67,7 @@ export default function LeetcodeActivity() {
 
       // ── Step 2: Fetch fresh data from server-side proxy ──
       try {
-        const response = await fetch('/api/leetcode', { cache: 'no-store' });
+        const response = await fetch(`${API_BASE_URL}/api/leetcode/stats`, { cache: 'no-store' });
         if (!response.ok) throw new Error(`LeetCode API proxy returned ${response.status}`);
         const json = await response.json();
 

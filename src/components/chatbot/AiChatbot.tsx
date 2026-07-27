@@ -23,6 +23,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { PROJECTS, SKILLS, EXPERIENCES, ACHIEVEMENTS } from '../../data';
+import { API_BASE_URL } from '../../services/api';
 
 interface Message {
   id: string;
@@ -102,7 +103,7 @@ export default function AiChatbot() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/ai-assistant', {
+      const res = await fetch(`${API_BASE_URL}/api/ai-assistant`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: queryText })

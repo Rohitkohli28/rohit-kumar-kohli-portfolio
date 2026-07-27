@@ -7,6 +7,7 @@ import React from 'react';
 import { 
   FileText, 
   Download, 
+  Eye,
   ExternalLink, 
   Github, 
   Linkedin, 
@@ -45,20 +46,18 @@ export default function RichCards({ type, onActionClick }: RichCardsProps) {
         </p>
 
         <div className="flex gap-2 pt-1 font-mono text-xs">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-resume-modal'))}
+            className="flex-1 px-3 py-2 bg-primary hover:bg-primary-dim text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+          >
+            <Eye size={13} /> Preview PDF
+          </button>
           <a
             href="/Rohit_Kumar_Kohli_Resume.pdf"
             download="Rohit_Kumar_Kohli_Resume.pdf"
-            className="flex-1 px-3 py-2 bg-primary hover:bg-primary-dim text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
-          >
-            <Download size={13} /> Download PDF
-          </a>
-          <a
-            href="/Rohit_Kumar_Kohli_Resume.pdf"
-            target="_blank"
-            rel="noreferrer"
             className="px-3.5 py-2 border border-border bg-card hover:bg-card/80 text-text rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
-            <ExternalLink size={13} /> View
+            <Download size={13} /> Download
           </a>
         </div>
       </div>

@@ -1,0 +1,137 @@
+import nodemailer from 'nodemailer';
+import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
+
+function parseSmtpError(error: any): { category: string; details: string } {
+  const msg = error?.message || String(error);
+  const code = error?.code || '';
+
+  if (msg.includes('EAUTH') || msg.includes('535 5.7.8') || msg.includes('authentication failed')) {
+    return {
+      category: 'SMTP Authentication Failed',
+      details: 'Invalid SMTP credentials. Check SMTP_USER and SMTP_PASS App Password.'
+    };
+  }
+  if (code === 'ETIMEDOUT' || msg.includes('timeout')) {
+    return {
+      category: 'Network Timeout',
+      details: 'Connection to SMTP server timed out. Verify network rules and outbound port 465/587.'
+    };
+  }
+  if (code === 'ENOTFOUND' || code === 'ECONNREFUSED' || msg.includes('getaddrinfo')) {
+    return {
+      category: 'SMTP Host Unreachable',
+      details: `Unable to resolve host ${env.SMTP_HOST}.`
+    };
+  }
+  if (msg.includes('550') || msg.includes('Recipient rejected')) {
+    return {
+      category: 'Recipient Rejected',
+      details: 'Target email address was rejected by mail server.'
+    };
+  }
+  return {
+    category: 'SMTP Transmission Failure',
+    details: msg
+  };
+}
+
+function getTransporter() {
+  if (!env.SMTP_USER || !env.SMTP_PASS) {
+    logger.error('❌ [SMTP Config Error] Missing SMTP_USER or SMTP_PASS.');
+    return null;
+  }
+
+  if (env.SMTP_USER.endsWith('@gmail.com') || env.SMTP_HOST.includes('gmail')) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS }
+    });
+  }
+
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_PORT === 465,
+    auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    tls: { rejectUnauthorized: false }
+  });
+}
+
+export async function sendContactEmail(params: {
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  clientIp?: string;
+}): Promise<{ success: boolean; messageId?: string; errorCategory?: string; errorDetails?: string }> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    return {
+      success: false,
+      errorCategory: 'Missing Configuration',
+      errorDetails: 'SMTP configuration is incomplete on the server.'
+    };
+  }
+
+  const timestampStr = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Kolkata',
+    dateStyle: 'full',
+    timeStyle: 'medium'
+  });
+
+  const mailOptions = {
+    from: `"${params.name}" <${env.SMTP_USER}>`,
+    replyTo: `"${params.name}" <${params.email}>`,
+    to: env.CONTACT_RECEIVER_EMAIL,
+    subject: `⚡ Portfolio Inquiry: ${params.subject || 'General Opportunity'}`,
+    text: `New Portfolio Inquiry:\n\nFrom: ${params.name} (${params.email})\nSubject: ${params.subject || 'General Opportunity'}\nDate: ${timestampStr}\nIP: ${params.clientIp || 'Unknown'}\n\nMessage:\n${params.message}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; padding: 32px 16px; color: #f8fafc;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); padding: 24px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800;">New Portfolio Inquiry</h1>
+            <p style="color: #e2e8f0; margin: 4px 0 0 0; font-size: 13px;">Dispatched from Rohit's Portfolio Website</p>
+          </div>
+          <div style="padding: 24px;">
+            <p><strong>Name:</strong> ${params.name}</p>
+            <p><strong>Email:</strong> <a href="mailto:${params.email}" style="color: #38bdf8;">${params.email}</a></p>
+            <p><strong>Subject:</strong> ${params.subject || 'General Opportunity'}</p>
+            <p><strong>Date:</strong> ${timestampStr}</p>
+            <hr style="border: none; border-top: 1px solid #334155; margin: 20px 0;" />
+            <p><strong>Message:</strong></p>
+            <div style="background-color: #0f172a; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 8px; white-space: pre-wrap;">${params.message}</div>
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  let attempts = 0;
+  const maxRetries = 3;
+  let lastError: any = null;
+
+  while (attempts < maxRetries) {
+    try {
+      attempts++;
+      logger.info(`[SMTP Dispatch] Attempt ${attempts}/${maxRetries} sending mail to ${env.CONTACT_RECEIVER_EMAIL}...`);
+      const result = await transporter.sendMail(mailOptions);
+      logger.info(`✅ [SMTP Success] MessageID: ${result.messageId}`);
+      return { success: true, messageId: result.messageId };
+    } catch (err: any) {
+      lastError = err;
+      logger.warn(`⚠️ [SMTP Attempt ${attempts} Failed]: ${err.message}`);
+      if (attempts < maxRetries) {
+        await new Promise((r) => setTimeout(r, attempts * 1000));
+      }
+    }
+  }
+
+  const parsed = parseSmtpError(lastError);
+  logger.error(`❌ [SMTP Final Failure] ${parsed.category}: ${parsed.details}`);
+  return {
+    success: false,
+    errorCategory: parsed.category,
+    errorDetails: parsed.details
+  };
+}
