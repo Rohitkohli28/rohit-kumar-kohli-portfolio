@@ -133,10 +133,10 @@ export default function LeetcodeActivity() {
   const totalHardCount = 710;
   const totalAllCount = totalEasyCount + totalMediumCount + totalHardCount;
 
-  const easySolved = lcData?.easySolved ?? 185;
-  const mediumSolved = lcData?.mediumSolved ?? 160;
+  const easySolved = lcData?.easySolved ?? 180;
+  const mediumSolved = lcData?.mediumSolved ?? 157;
   const hardSolved = lcData?.hardSolved ?? 15;
-  const totalSolved = lcData?.totalSolved ?? 360;
+  const totalSolved = lcData?.totalSolved ?? 352;
 
   const easyPercent = Math.min(100, Math.round((easySolved / totalEasyCount) * 100));
   const mediumPercent = Math.min(100, Math.round((mediumSolved / totalMediumCount) * 100));

@@ -197,14 +197,14 @@ export default function About() {
               variants={floatCardVariants}
               custom={1}
               whileHover={{ y: -6, scale: 1.03, transition: { type: 'spring', stiffness: 300, damping: 12 } }}
-              className="absolute top-4 left-4 md:left-8 glass-card rounded-2xl p-4 flex items-center gap-3.5 z-20 shadow-xl max-w-[155px] cursor-pointer"
+              className="absolute top-2 left-2 sm:top-4 sm:left-6 md:left-8 glass-card rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3.5 z-20 shadow-xl cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
                 <GraduationCap size={18} />
               </div>
               <div>
-                <div className="text-lg font-display font-extrabold text-text">8.18</div>
-                <div className="text-[10px] font-mono text-muted uppercase">CSE CGPA</div>
+                <div className="text-base sm:text-lg font-display font-extrabold text-text">8.18</div>
+                <div className="text-[9px] sm:text-[10px] font-mono text-muted uppercase">CSE CGPA</div>
               </div>
             </motion.div>
 
@@ -213,14 +213,14 @@ export default function About() {
               variants={floatCardVariants}
               custom={2}
               whileHover={{ y: -6, scale: 1.03, transition: { type: 'spring', stiffness: 300, damping: 12 } }}
-              className="absolute top-12 right-2 md:right-8 glass-card rounded-2xl p-4 flex items-center gap-3.5 z-20 shadow-xl max-w-[165px] cursor-pointer"
+              className="absolute top-10 right-2 sm:top-12 sm:right-6 md:right-8 glass-card rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3.5 z-20 shadow-xl cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
                 <Award size={18} />
               </div>
               <div>
-                <div className="text-lg font-display font-extrabold text-text">350+</div>
-                <div className="text-[10px] font-mono text-muted uppercase">LeetCode Solved</div>
+                <div className="text-base sm:text-lg font-display font-extrabold text-text">352+</div>
+                <div className="text-[9px] sm:text-[10px] font-mono text-muted uppercase">LeetCode Solved</div>
               </div>
             </motion.div>
 
@@ -229,14 +229,14 @@ export default function About() {
               variants={floatCardVariants}
               custom={3}
               whileHover={{ y: -6, scale: 1.03, transition: { type: 'spring', stiffness: 300, damping: 12 } }}
-              className="absolute bottom-16 left-2 md:left-6 glass-card rounded-2xl p-4 flex items-center gap-3.5 z-20 shadow-xl max-w-[155px] cursor-pointer"
+              className="absolute bottom-12 left-2 sm:bottom-16 sm:left-6 md:left-6 glass-card rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3.5 z-20 shadow-xl cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
                 <Briefcase size={18} />
               </div>
               <div>
-                <div className="text-lg font-display font-extrabold text-text">3 Roles</div>
-                <div className="text-[10px] font-mono text-muted uppercase">Internships</div>
+                <div className="text-base sm:text-lg font-display font-extrabold text-text">3 Roles</div>
+                <div className="text-[9px] sm:text-[10px] font-mono text-muted uppercase">Internships</div>
               </div>
             </motion.div>
 
@@ -245,14 +245,14 @@ export default function About() {
               variants={floatCardVariants}
               custom={4}
               whileHover={{ y: -6, scale: 1.03, transition: { type: 'spring', stiffness: 300, damping: 12 } }}
-              className="absolute bottom-8 right-6 md:right-10 glass-card rounded-2xl p-4 flex items-center gap-3.5 z-20 shadow-xl max-w-[160px] cursor-pointer"
+              className="absolute bottom-4 right-2 sm:bottom-8 sm:right-6 md:right-10 glass-card rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3.5 z-20 shadow-xl cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 shrink-0">
                 <Calendar size={18} />
               </div>
               <div>
-                <div className="text-lg font-display font-extrabold text-text">2023-27</div>
-                <div className="text-[10px] font-mono text-muted uppercase">B.Tech tenure</div>
+                <div className="text-base sm:text-lg font-display font-extrabold text-text">2023-27</div>
+                <div className="text-[9px] sm:text-[10px] font-mono text-muted uppercase">B.Tech tenure</div>
               </div>
             </motion.div>
           </div>

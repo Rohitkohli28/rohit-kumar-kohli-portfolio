@@ -42,18 +42,14 @@ function getTransporter() {
     return null;
   }
 
-  if (env.SMTP_USER.endsWith('@gmail.com') || env.SMTP_HOST.includes('gmail')) {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS }
-    });
-  }
-
   return nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_PORT === 465,
+    host: env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(env.SMTP_PORT) || 465,
+    secure: Number(env.SMTP_PORT) === 465,
     auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    connectionTimeout: 4000,
+    greetingTimeout: 4000,
+    socketTimeout: 5000,
     tls: { rejectUnauthorized: false }
   });
 }
@@ -98,6 +94,45 @@ export async function sendContactEmail(params: {
             <p><strong>Email:</strong> <a href="mailto:${params.email}" style="color: #38bdf8;">${params.email}</a></p>
             <p><strong>Subject:</strong> ${params.subject || 'General Opportunity'}</p>
             <p><strong>Date:</strong> ${timestampStr}</p>
+            <p><strong>Client IP:</strong> ${params.clientIp || 'Unknown'}</p>
+            <div style="margin-top: 16px; padding: 16px; background-color: #0f172a; border-radius: 8px; border-left: 4px solid #3b82f6;">
+              <p style="margin: 0; white-space: pre-wrap; color: #cbd5e1;">${params.message}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    // 5-second timeout guard to prevent hanging requests
+    const timeoutPromise = new Promise<{ success: boolean; errorCategory: string; errorDetails: string }>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          success: false,
+          errorCategory: 'Network Timeout',
+          errorDetails: 'SMTP transmission timed out after 5 seconds.'
+        });
+      }, 5000);
+    });
+
+    const sendPromise = transporter.sendMail(mailOptions).then((info) => ({
+      success: true,
+      messageId: info.messageId
+    }));
+
+    const result: any = await Promise.race([sendPromise, timeoutPromise]);
+    return result;
+  } catch (error: any) {
+    logger.error('❌ [Nodemailer Transport Error]:', error);
+    const parsed = parseSmtpError(error);
+    return {
+      success: false,
+      errorCategory: parsed.category,
+      errorDetails: parsed.details
+    };
+  }
+}
             <hr style="border: none; border-top: 1px solid #334155; margin: 20px 0;" />
             <p><strong>Message:</strong></p>
             <div style="background-color: #0f172a; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 8px; white-space: pre-wrap;">${params.message}</div>
