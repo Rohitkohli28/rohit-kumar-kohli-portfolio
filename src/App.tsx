@@ -16,13 +16,12 @@ import Projects from './components/sections/Projects';
 import GithubActivity from './components/sections/GithubActivity';
 import LeetcodeActivity from './components/sections/LeetcodeActivity';
 import Achievements from './components/sections/Achievements';
+import BadgesSection from './components/sections/BadgesSection';
+import HackathonsSection from './components/sections/HackathonsSection';
 import Contact from './components/sections/Contact';
 import Footer from './components/layout/Footer';
 import TerminalModal from './components/sections/TerminalModal';
 import ResumeModal from './components/ResumeModal';
-
-// Lazy-load AI Chatbot for zero initial bundle size impact
-const ChatWindow = React.lazy(() => import('./components/AIChat/ChatWindow'));
 
 export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -160,6 +159,14 @@ export default function App() {
             </div>
 
             <div className="reveal-on-scroll">
+              <BadgesSection />
+            </div>
+
+            <div className="reveal-on-scroll">
+              <HackathonsSection />
+            </div>
+
+            <div className="reveal-on-scroll">
               <Contact />
             </div>
           </main>
@@ -172,11 +179,6 @@ export default function App() {
 
           {/* 8. Resume PDF Preview & Download Modal */}
           <ResumeModal isOpen={isResumeModalOpen} onClose={() => setIsResumeModalOpen(false)} />
-
-          {/* 9. Floating AI Portfolio Assistant Chatbot (Lazy-Loaded) */}
-          <React.Suspense fallback={null}>
-            <ChatWindow />
-          </React.Suspense>
         </div>
       )}
     </ThemeProvider>

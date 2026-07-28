@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Project, Skill, Experience, Achievement } from './types';
+import { Project, Skill, Experience, Achievement, BadgeItem, HackathonItem } from './types';
 
 export const SKILLS: Skill[] = [
   // Languages
@@ -160,6 +160,136 @@ export const PROJECTS: Project[] = [
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
+    id: 'india-ai-impact-buildathon',
+    title: 'India AI Impact Buildathon',
+    issuer: 'GUVI x HCL',
+    date: 'Feb 2026',
+    impact: 'Participated in national AI buildathon creating impactful solutions leveraging machine learning and AI technologies.',
+    iconName: 'Award',
+    accent: '#00C853',
+    credentialId: '167lmEON42q9by1e17',
+    verifyUrl: 'https://www.guvi.in/share-certificate/167lmEON42q9by1e17'
+  },
+  {
+    id: 'tvs-credit-epic',
+    title: 'TVS Credit EPIC 7.0 – IT Challenge',
+    issuer: 'TVS Credit Services Ltd.',
+    date: 'Oct 2025',
+    impact: 'Competed in national IT challenge solving complex enterprise engineering and business technology problems.',
+    iconName: 'Trophy',
+    accent: '#3F51B5'
+  },
+  {
+    id: 'bhartiya-antariksh-hackathon',
+    title: 'Certificate of Acknowledgement – Bhartiya Antariksh Hackathon 2025',
+    issuer: 'ISRO & H2S Hackathon',
+    date: 'Sep 2025',
+    impact: 'Recognized by ISRO for innovative technological contributions in space technology and satellite data applications.',
+    iconName: 'Rocket',
+    accent: '#FF9800',
+    credentialId: '2025H2S06BAH25-P01666'
+  },
+  {
+    id: 'hackground-india-2k25',
+    title: 'Certificate of Participation in Hackground India 2K25',
+    issuer: 'Unstop',
+    date: 'Sep 2025',
+    impact: 'Engaged in competitive national hackathon developing real-world software prototypes under tight deadlines.',
+    iconName: 'Code',
+    accent: '#10B981',
+    credentialId: 'f80474ac-8c23-4ab4-aca2-48dd89f24abe'
+  },
+  {
+    id: 'nextgen-pm',
+    title: 'NextGen PM: National Product Management Championship',
+    issuer: 'Unstop',
+    date: 'Aug 2025',
+    impact: 'Demonstrated strategic product roadmap planning, user research analysis, and feature prioritization.',
+    iconName: 'Layers',
+    accent: '#EC4899',
+    credentialId: '536c0ffd-84dc-4908-93ce-03299cc48460'
+  },
+  {
+    id: 'aws-ai-solutions',
+    title: 'AWS Services for AI Solutions',
+    issuer: 'Amazon Web Services (AWS)',
+    date: 'Jul 2025',
+    impact: 'Mastered building scalable AI/ML pipelines, cloud inference endpoints, and intelligent web integrations using AWS cloud services.',
+    iconName: 'Cloud',
+    accent: '#FF9900',
+    credentialId: 'TJQEF0FJAW8P'
+  },
+  {
+    id: 'goldman-sachs-operations',
+    title: 'Operations Job Simulation',
+    issuer: 'Goldman Sachs',
+    date: 'Jun 2025',
+    impact: 'Completed practical operational workflows, process automation, and risk analysis simulations for global financial services.',
+    iconName: 'Briefcase',
+    accent: '#60A5FA',
+    credentialId: 'Sj5k69CWT7NQwYQcB'
+  },
+  {
+    id: 'walmart-software-eng',
+    title: 'Advanced Software Engineering Simulation',
+    issuer: 'Walmart Global Tech',
+    date: 'Jun 2025',
+    impact: 'Solved enterprise architecture challenges, data structure optimization, and high-concurrency system design scenarios.',
+    iconName: 'Terminal',
+    accent: '#0071CE',
+    credentialId: 'E3xvxyvnjtABoYawP'
+  },
+  {
+    id: 'ibm-generative-ai',
+    title: 'Generative AI: Introduction and Applications',
+    issuer: 'IBM',
+    date: 'Jun 2025',
+    impact: 'Gained comprehensive expertise in foundational LLM architectures, fine-tuning methodologies, and enterprise AI implementation.',
+    iconName: 'Cpu',
+    accent: '#052FAD',
+    credentialId: '955G8L2AZ180'
+  },
+  {
+    id: 'google-cybersecurity',
+    title: 'Foundations of Cybersecurity',
+    issuer: 'Google',
+    date: 'Jun 2025',
+    impact: 'Acquired core competencies in network security, threat modeling, SIEM tools, and security compliance frameworks.',
+    iconName: 'Shield',
+    accent: '#4285F4',
+    credentialId: 'QNNSWGK2TYQ9'
+  },
+  {
+    id: 'deloitte-cyber',
+    title: 'Cyber Job Simulation',
+    issuer: 'Deloitte',
+    date: 'Jun 2025',
+    impact: 'Executed cybersecurity incident response analysis, vulnerability assessment, and enterprise security consulting tasks.',
+    iconName: 'Shield',
+    accent: '#86BC25',
+    credentialId: '56jLKiShgz4SkXQFJ'
+  },
+  {
+    id: 'aws-certifications',
+    title: 'AWS Certifications',
+    issuer: 'Amazon Web Services (AWS)',
+    date: 'Jun 2025',
+    impact: 'Validated foundational cloud infrastructure deployment, IAM security configurations, and serverless compute patterns.',
+    iconName: 'Cloud',
+    accent: '#FF9900',
+    credentialId: '5wRd3cekiyp9HFdbd'
+  },
+  {
+    id: 'ibm-prompt-engineering',
+    title: 'Generative AI: Prompt Engineering Basics',
+    issuer: 'IBM',
+    date: 'May 2025',
+    impact: 'Learned advanced prompt structure design, zero/few-shot techniques, and guardrailing strategies for generative AI applications.',
+    iconName: 'Sparkles',
+    accent: '#0F62FE',
+    credentialId: 'NI0HT7D675TO'
+  },
+  {
     id: 'gcloud-hack',
     title: 'Google Cloud Hackathon',
     issuer: 'National Level Hackathon',
@@ -169,22 +299,13 @@ export const ACHIEVEMENTS: Achievement[] = [
     accent: '#4285F4'
   },
   {
-    id: 'elite-coder',
-    title: 'Elite Coders Winter of Code',
-    issuer: 'Algorithmic Bootcamp',
-    date: '2023',
-    impact: 'Honored as a top performer for executing high-efficiency Java solutions for advanced graph and tree structures.',
-    iconName: 'Award',
-    accent: '#10B981'
-  },
-  {
-    id: 'azure-developer',
-    title: 'Microsoft Certified: Azure Developer Associate',
-    issuer: 'Microsoft',
+    id: 'servicenow-cert',
+    title: 'ServiceNow Certified Developer',
+    issuer: 'ServiceNow',
     date: '2024',
-    impact: 'Validated proficiency in designing, building, testing, and maintaining secure, scalable cloud applications and APIs on Microsoft Azure.',
-    iconName: 'Shield',
-    accent: '#008AD7'
+    impact: 'Certified platform developer credentials for script inclusions, custom widgets, client scripts, and system integrations.',
+    iconName: 'Settings',
+    accent: '#81C784'
   },
   {
     id: 'meta-frontend',
@@ -205,21 +326,249 @@ export const ACHIEVEMENTS: Achievement[] = [
     accent: '#052FAD'
   },
   {
-    id: 'aicte-neat',
-    title: 'AICTE NEAT Internship',
-    issuer: 'Govt. of India recognized',
+    id: 'elite-coder',
+    title: 'Elite Coders Winter of Code',
+    issuer: 'Algorithmic Bootcamp',
     date: '2023',
-    impact: 'Selected for state-level technological training, completing microservices architecture and client-server project briefs.',
-    iconName: 'FileCheck',
-    accent: '#EF4444'
+    impact: 'Honored as a top performer for executing high-efficiency Java solutions for advanced graph and tree structures.',
+    iconName: 'Award',
+    accent: '#10B981'
+  }
+];
+
+export const BADGES: BadgeItem[] = [
+  {
+    id: 'quant-aptitude-bronze',
+    title: 'Quantitative Aptitude Bronze Badge',
+    organization: 'Naukri Campus',
+    issuedDate: 'June 2026',
+    category: 'Aptitude • Quantitative',
+    description: 'Earned for building a strong foundation in quantitative aptitude, numerical reasoning, and mathematical problem-solving.',
+    buttonText: 'Show Credential',
+    verifyLink: 'https://www.naukri.com/campus',
+    badgeType: 'badge',
+    iconName: 'Medal',
+    accentColor: '#CD7F32'
   },
   {
-    id: 'servicenow-cert',
-    title: 'ServiceNow Certified Developer',
-    issuer: 'ServiceNow',
-    date: '2024',
-    impact: 'Certified platform developer credentials for script inclusions, custom widgets, client scripts, and system integrations.',
-    iconName: 'Settings',
-    accent: '#81C784'
+    id: 'gcloud-conversation-design',
+    title: 'Conversation Design Fundamentals',
+    organization: 'Google Cloud',
+    issuedDate: 'August 7, 2025',
+    category: 'AI • Conversational AI',
+    description: 'Learned the fundamentals of designing effective conversational experiences, user interaction flows, and AI-powered dialogue systems.',
+    buttonText: 'Learn More',
+    verifyLink: 'https://cloud.google.com/training/badges',
+    iconName: 'MessageSquareCode',
+    accentColor: '#4285F4'
+  },
+  {
+    id: 'gcloud-intro-generative-ai',
+    title: 'Introduction to Generative AI',
+    organization: 'Google Cloud',
+    issuedDate: 'June 8, 2025',
+    category: 'Generative AI',
+    description: 'Completed Google\'s introductory program covering Large Language Models, Generative AI concepts, and practical AI applications.',
+    buttonText: 'Learn More',
+    verifyLink: 'https://cloud.google.com/training/badges',
+    iconName: 'Sparkles',
+    accentColor: '#34A853'
+  },
+  {
+    id: 'ulsa-ai-appreciation',
+    title: 'AI Appreciation Badge',
+    organization: 'United Latino Students Association',
+    issuedDate: 'July 2025',
+    category: 'Artificial Intelligence',
+    description: 'Recognizes foundational understanding of Artificial Intelligence concepts and emerging AI technologies.',
+    buttonText: 'Show Credential',
+    verifyLink: 'https://www.credly.com/',
+    iconName: 'Award',
+    accentColor: '#8B5CF6'
+  },
+  {
+    id: 'ulsa-ai-aware',
+    title: 'AI Aware Badge',
+    organization: 'United Latino Students Association',
+    issuedDate: 'July 2025',
+    category: 'Artificial Intelligence',
+    description: 'Awarded for demonstrating awareness of AI fundamentals, ethical considerations, and practical applications.',
+    buttonText: 'Show Credential',
+    verifyLink: 'https://www.credly.com/',
+    iconName: 'ShieldCheck',
+    accentColor: '#06B6D4'
+  },
+  {
+    id: 'naukri-ssc-cgl-achievement',
+    title: 'SSC CGL #8 Competition Achievement',
+    organization: 'Naukri Campus',
+    issuedDate: '2025',
+    category: 'Competitive Achievement',
+    description: 'Successfully participated in the Crack Government Exam (SSC CGL) #8 competition and secured Rank #10 among 22,458 participants nationwide, demonstrating strong analytical thinking, consistency, and problem-solving skills.',
+    buttonText: 'Show Credential',
+    verifyLink: 'https://www.naukri.com/campus',
+    badgeType: 'achievement',
+    iconName: 'Trophy',
+    accentColor: '#F59E0B'
+  },
+  {
+    id: 'ai-for-all',
+    title: 'AI For All',
+    organization: 'Intel & Govt. of India',
+    issuedDate: '2025',
+    category: 'AI Literacy',
+    description: 'Appreciation badge for completing the national AI awareness initiative, understanding core AI concepts and ethical social impacts.',
+    buttonText: 'Show Credential',
+    verifyLink: 'https://ai-for-all.in/',
+    badgeType: 'badge',
+    iconName: 'Globe',
+    accentColor: '#0071C5'
+  },
+  {
+    id: 'future-ready',
+    title: 'Future Ready Tech Certification',
+    organization: 'Microsoft & Edunet Foundation',
+    issuedDate: '2025',
+    category: 'Cloud & Emerging Tech',
+    description: 'Certified for completing future-ready technology skills training in cloud computing, modern software architectures, and AI tools.',
+    buttonText: 'Show Credential',
+    verifyLink: 'https://microsoft.com/',
+    badgeType: 'badge',
+    iconName: 'Compass',
+    accentColor: '#00A4EF'
+  }
+];
+
+export const HACKATHONS: HackathonItem[] = [
+  {
+    id: 'nextgen-pm-championship',
+    title: 'NextGen PM – National Product Management Championship',
+    organizer: 'Book My Mentor',
+    category: 'Product Management',
+    categoryChip: '📊 Product Management',
+    achievement: '🏅 Secured 4th Rank Nationwide',
+    description: 'Secured 4th Rank nationally, showcasing excellence in product strategy, user-centric thinking, business analysis, and structured problem solving in a competitive national-level championship.',
+    date: '2025',
+    featured: true,
+    verifyLink: 'https://unstop.com/certificate',
+    accentColor: '#F59E0B',
+    iconName: 'Trophy'
+  },
+  {
+    id: 'superhack-2025',
+    title: 'SuperHack 2025',
+    organizer: 'SuperOps + AWS + Hack2Skill',
+    category: 'AI Hackathon',
+    categoryChip: '🤖 AI Hackathon',
+    achievement: 'Certificate of Participation',
+    description: 'Participated in SuperHack 2025, contributing to the development of AI-powered solutions for real-world IT management challenges while collaborating on innovative ideas.',
+    date: '2025',
+    verifyLink: 'https://hack2skill.com/',
+    accentColor: '#3B82F6',
+    iconName: 'Cpu'
+  },
+  {
+    id: 'genai-exchange-hackathon',
+    title: 'Gen AI Exchange Hackathon',
+    organizer: 'Google Cloud + Hack2Skill',
+    category: 'Generative AI',
+    categoryChip: '🤖 AI Hackathon',
+    achievement: 'Prototype Submission',
+    description: 'Built and submitted an AI-powered prototype for the "Personalized Career & Skills Advisor" problem statement, contributing to AI innovation through Google Cloud\'s Gen AI Exchange Hackathon.',
+    date: '2025',
+    verifyLink: 'https://cloud.google.com/',
+    accentColor: '#4285F4',
+    iconName: 'Sparkles'
+  },
+  {
+    id: 'bhartiya-antariksh-hackathon-comp',
+    title: 'Bharatiya Antariksh Hackathon',
+    organizer: 'ISRO + Hack2Skill',
+    category: 'Space Technology',
+    categoryChip: '🌌 Space Tech',
+    achievement: 'Idea Submission',
+    description: 'Successfully submitted an innovative solution for the Bharatiya Antariksh Hackathon, focusing on solving real-world space technology challenges through creative thinking and engineering.',
+    date: '2025',
+    verifyLink: 'https://isro.gov.in/',
+    accentColor: '#FF9800',
+    iconName: 'Rocket'
+  },
+  {
+    id: 'ai-agents-that-build',
+    title: 'AI Agents That Build',
+    organizer: 'AugmentAppz',
+    category: 'AI Hackathon',
+    categoryChip: '🤖 AI Hackathon',
+    achievement: 'Participation',
+    description: 'Participated in AI HackFest focused on building intelligent AI Agents using the qRaptor Low-Code / No-Code GenAI platform.',
+    date: '2025',
+    verifyLink: 'https://augmentappz.com/',
+    accentColor: '#8B5CF6',
+    iconName: 'Bot'
+  },
+  {
+    id: 'hackathon-irs-2026',
+    title: 'Hackathon of IRS 2026',
+    organizer: 'Indian Institute of Management (IIM), Indore',
+    category: 'Innovation Challenge',
+    categoryChip: '🚀 Innovation',
+    achievement: 'Participation',
+    description: 'Participated in Hackathon of IRS 2026 during IIM Indore\'s flagship festival, collaborating on innovative technology-driven solutions.',
+    date: '2026',
+    verifyLink: 'https://iimidr.ac.in/',
+    accentColor: '#EC4899',
+    iconName: 'Lightbulb'
+  },
+  {
+    id: 'synapse-neurotech-challenge',
+    title: 'Synapse – NeuroTech Challenge',
+    organizer: 'IIT Dharwad',
+    category: 'AI / NeuroTech',
+    categoryChip: '🤖 AI Hackathon',
+    achievement: 'Participation',
+    description: 'Participated in the Synapse NeuroTech Challenge, exploring innovative applications of AI and emerging technologies in neuroscience-inspired problem solving.',
+    date: '2025',
+    verifyLink: 'https://iitdh.ac.in/',
+    accentColor: '#06B6D4',
+    iconName: 'Activity'
+  },
+  {
+    id: 'tvs-credit-epic-comp',
+    title: 'TVS Credit EPIC 7.0',
+    organizer: 'TVS Credit',
+    category: 'Technology Challenge',
+    categoryChip: '💻 Software Engineering',
+    achievement: 'Participation',
+    description: 'Participated in the EPIC 7.0 IT Challenge, solving technology-driven business problems and demonstrating software engineering and analytical skills.',
+    date: '2025',
+    verifyLink: 'https://tvscredit.com/',
+    accentColor: '#3F51B5',
+    iconName: 'Code'
+  },
+  {
+    id: 'tatva-hackwave',
+    title: 'Tatva HackWave 1.0',
+    organizer: 'Lovely Professional University (LPU)',
+    category: 'Software Engineering',
+    categoryChip: '💻 Software Engineering',
+    achievement: 'Participation',
+    description: 'Participated in HackWave 1.0, collaborating to design practical software solutions while enhancing teamwork and technical problem-solving abilities.',
+    date: '2025',
+    verifyLink: 'https://lpu.in/',
+    accentColor: '#10B981',
+    iconName: 'Terminal'
+  },
+  {
+    id: 'ideathon-2025',
+    title: 'Ideathon 2025',
+    organizer: 'Vasantdada Patil Pratishthan\'s College of Engineering',
+    category: 'Ideathon',
+    categoryChip: '💡 Ideathon',
+    achievement: 'Participation',
+    description: 'Contributed innovative ideas and demonstrated creativity during Ideathon 2025, focusing on technology-enabled solutions for real-world challenges.',
+    date: '2025',
+    verifyLink: 'https://vppcoe.ac.in/',
+    accentColor: '#F59E0B',
+    iconName: 'Zap'
   }
 ];

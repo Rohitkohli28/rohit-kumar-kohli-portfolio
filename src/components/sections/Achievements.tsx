@@ -79,14 +79,12 @@ function CertificateCard({ item, index, total, scrollYProgress, isMobile }: Cert
   const verifyUrls: Record<string, string> = {
     'gcloud-hack': 'https://cloud.google.com/',
     'elite-coder': 'https://github.com/Rohitkohli28',
-    'azure-developer': 'https://learn.microsoft.com/en-us/credentials/certifications/azure-developer/',
     'meta-frontend': 'https://www.coursera.org/verify/professional-cert/meta-front-end-developer',
     'ibm-data-science': 'https://www.coursera.org/verify/professional-cert/ibm-data-science',
-    'aicte-neat': 'https://neat.aicte-india.org/',
     'servicenow-cert': 'https://www.servicenow.com/services-training/certification.html'
   };
 
-  const verifyUrl = verifyUrls[item.id] || 'https://github.com/Rohitkohli28';
+  const verifyUrl = item.verifyUrl || verifyUrls[item.id] || 'https://github.com/Rohitkohli28';
 
   const renderIcon = (iconName: string, accent: string) => {
     switch (iconName) {
@@ -104,6 +102,20 @@ function CertificateCard({ item, index, total, scrollYProgress, isMobile }: Cert
         return <Lucide.FileCheck2 size={24} style={{ color: accent }} />;
       case 'Settings':
         return <Lucide.SlidersHorizontal size={24} style={{ color: accent }} />;
+      case 'Rocket':
+        return <Lucide.Rocket size={24} style={{ color: accent }} />;
+      case 'Briefcase':
+        return <Lucide.Briefcase size={24} style={{ color: accent }} />;
+      case 'Terminal':
+        return <Lucide.Terminal size={24} style={{ color: accent }} />;
+      case 'Cpu':
+        return <Lucide.Cpu size={24} style={{ color: accent }} />;
+      case 'Layers':
+        return <Lucide.Layers size={24} style={{ color: accent }} />;
+      case 'Sparkles':
+        return <Lucide.Sparkles size={24} style={{ color: accent }} />;
+      case 'Trophy':
+        return <Lucide.Trophy size={24} style={{ color: accent }} />;
       default:
         return <Lucide.Award size={24} style={{ color: accent }} />;
     }
@@ -172,7 +184,7 @@ function CertificateCard({ item, index, total, scrollYProgress, isMobile }: Cert
             STATUS: ACTIVE VERIFIED
           </span>
           <span className="text-[7px] font-mono text-muted block break-all">
-            TOKEN_ID: {(item.id + item.date).toUpperCase()}_SEC_GRP
+            ID: {item.credentialId ? item.credentialId : `${(item.id + item.date).replaceAll(' ', '_').toUpperCase()}_SEC_GRP`}
           </span>
         </div>
 
@@ -209,11 +221,12 @@ export default function Achievements() {
   });
 
   // Transform the vertical scroll progress into horizontal track translation
-  // Moves from right (0px starting offset) to left
-  const xTransform = useTransform(scrollYProgress, [0, 1], ["0px", "-2300px"]);
+  // Dynamic offset calculation based on total certificate cards (card width 400px + gap 40px = 440px)
+  const maxScrollOffset = `-${Math.max(0, (ACHIEVEMENTS.length - 2) * 440)}px`;
+  const xTransform = useTransform(scrollYProgress, [0, 1], ["0px", maxScrollOffset]);
 
   return (
-    <div ref={containerRef} id="achievements" className={`relative w-full ${isMobile ? 'py-16 bg-bg border-b border-border' : 'h-[320vh]'}`}>
+    <div ref={containerRef} id="achievements" className={`relative w-full ${isMobile ? 'py-16 bg-bg border-b border-border' : 'h-[650vh]'}`}>
       
       {/* STICKY CONTAINER FOR DESKTOP */}
       <div className={`${isMobile ? 'relative' : 'sticky top-0 h-[100vh] w-full flex flex-col justify-center overflow-hidden bg-bg border-b border-border'}`}>

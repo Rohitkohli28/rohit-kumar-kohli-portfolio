@@ -48,4 +48,36 @@ export interface Achievement {
   impact: string;
   iconName: string;
   accent: string;
+  credentialId?: string;
+  verifyUrl?: string;
+}
+
+export interface BadgeItem {
+  id: string;
+  title: string;
+  organization: string;
+  issuedDate: string;
+  description: string;
+  category: string;
+  verifyLink?: string;
+  buttonText: string;
+  badgeType?: 'badge' | 'achievement';
+  iconName: string;
+  accentColor: string;
+  badgeImage?: string;
+}
+
+export interface HackathonItem {
+  id: string;
+  title: string;
+  organizer: string;
+  category: string;
+  categoryChip: string;
+  achievement: string;
+  description: string;
+  date: string;
+  featured?: boolean;
+  verifyLink?: string;
+  accentColor: string;
+  iconName: string;
 }
