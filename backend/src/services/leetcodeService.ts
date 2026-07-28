@@ -234,7 +234,7 @@ export async function getLeetCodeStatsService(): Promise<any> {
         const payload = {
           fallback: false,
           fetchedAt: new Date().toISOString(),
-          totalQuestions: (data.allQuestionsCount || []).reduce((acc: number, i) => acc + (i.count || 0), 0) || 3500,
+          totalQuestions: (data.allQuestionsCount || []).reduce((acc: number, i: any) => acc + (i?.count || 0), 0) || 3500,
           totalSolved, easySolved, mediumSolved, hardSolved,
           ranking: data.matchedUser.profile?.ranking || 363253,
           userAvatar: data.matchedUser.profile?.userAvatar || 'https://assets.leetcode.com/users/default_avatar.png',
