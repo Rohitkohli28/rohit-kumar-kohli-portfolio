@@ -94,10 +94,10 @@ async function fetchRecentSubmissions(username: string): Promise<any[]> {
       headers: { 'User-Agent': 'rohit-portfolio-backend', 'Accept': 'application/json' }
     });
     if (res.ok) {
-      const json = (await res.json()) as AlfaSubmissionsResponse;
+      const json: any = await res.json();
       const list = json.submission || json.recentSubmissionList || json.acSubmissionList || [];
       if (Array.isArray(list) && list.length > 0) {
-        return list.slice(0, 10).map((sub: AlfaSubmission) => {
+        return list.slice(0, 10).map((sub: any) => {
           const ts = parseInt(sub.timestamp || sub.time || '0', 10);
           let difficulty = sub.difficulty || 'Medium';
           const title = sub.title || sub.titleSlug || 'Problem';
@@ -148,15 +148,15 @@ export async function getLeetCodeStatsService(): Promise<any> {
     });
 
     if (statsRes.ok) {
-      const stats = (await statsRes.json()) as LeetCodeStatsApiResponse;
+      const stats: any = await statsRes.json();
       if (stats.status !== 'error') {
         const payload = {
           fallback: false,
           fetchedAt: new Date().toISOString(),
           totalQuestions: stats.totalQuestions || 3500,
-          totalSolved: stats.totalSolved || 360,
-          easySolved: stats.easySolved || 185,
-          mediumSolved: stats.mediumSolved || 160,
+          totalSolved: stats.totalSolved || 352,
+          easySolved: stats.easySolved || 180,
+          mediumSolved: stats.mediumSolved || 157,
           hardSolved: stats.hardSolved || 15,
           ranking: stats.ranking || 363253,
           userAvatar: stats.userAvatar || 'https://assets.leetcode.com/users/default_avatar.png',
@@ -205,17 +205,17 @@ export async function getLeetCodeStatsService(): Promise<any> {
     });
 
     if (response.ok) {
-      const json = (await response.json()) as LeetCodeGraphQLResponse;
+      const json: any = await response.json();
       const data = json.data;
       if (data && data.matchedUser) {
         const acSubmissions = data.matchedUser.submitStatsGlobal?.acSubmissionNum || [];
-        const totalSolved = acSubmissions.find((i) => i.difficulty === 'All')?.count || 360;
-        const easySolved = acSubmissions.find((i) => i.difficulty === 'Easy')?.count || 185;
-        const mediumSolved = acSubmissions.find((i) => i.difficulty === 'Medium')?.count || 160;
-        const hardSolved = acSubmissions.find((i) => i.difficulty === 'Hard')?.count || 15;
+        const totalSolved = acSubmissions.find((i: any) => i.difficulty === 'All')?.count || 352;
+        const easySolved = acSubmissions.find((i: any) => i.difficulty === 'Easy')?.count || 180;
+        const mediumSolved = acSubmissions.find((i: any) => i.difficulty === 'Medium')?.count || 157;
+        const hardSolved = acSubmissions.find((i: any) => i.difficulty === 'Hard')?.count || 15;
 
         if (liveRecent.length === 0 && data.recentSubmissionList && Array.isArray(data.recentSubmissionList)) {
-          liveRecent = data.recentSubmissionList.map((sub) => {
+          liveRecent = data.recentSubmissionList.map((sub: any) => {
             const ts = parseInt(sub.timestamp || '0', 10);
             let difficulty = 'Medium';
             const tLower = (sub.title || '').toLowerCase();
